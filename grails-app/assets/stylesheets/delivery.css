@@ -1,0 +1,159 @@
+/* delivery.css — styles for the delivery system UI */
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    color: #333;
+    border-bottom: 2px solid #4a90d9;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #333;
+    font-size: 18px;
+}
+
+/* Navigation buttons row */
+.nav-buttons {
+    margin: 0 0 16px 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Filter row */
+.filter-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* General button */
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    text-decoration: none;
+    display: inline-block;
+    background-color: #e0e0e0;
+    color: #333;
+}
+.btn:hover        { opacity: 0.85; }
+.btn-primary      { background-color: #4a90d9; color: white; }
+.btn-danger       { background-color: #e74c3c; color: white; }
+.btn-success      { background-color: #27ae60; color: white; }
+.btn-info         { background-color: #2980b9; color: white; }
+.btn-secondary    { background-color: #7f8c8d; color: white; }
+.btn-delete       { background-color: #c0392b; color: white; }
+.btn-sm           { padding: 4px 10px; font-size: 12px; }
+
+/* Search box */
+#searchBox {
+    width: 260px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Main table */
+#locationTable {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-top: 4px;
+}
+
+#locationTable thead {
+    background-color: #4a90d9;
+    color: white;
+}
+
+#locationTable th,
+#locationTable td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+#locationTable tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+/* HIGH priority rows — red left border so they stand out at a glance */
+tr.high-priority {
+    border-left: 4px solid #e74c3c;
+    background-color: #fff5f5;
+}
+
+/* Full warehouse rows — orange left border */
+tr.warehouse-full {
+    border-left: 4px solid #e67e22;
+    background-color: #fff8f0;
+}
+
+/* Priority level badges */
+.priority {
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+.priority-high   { background: #fde8e8; color: #c0392b; }
+.priority-medium { background: #fef9e7; color: #d68910; }
+.priority-low    { background: #eafaf1; color: #1e8449; }
+
+/* Type badges */
+.badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.badge-delivery  { background: #d6eaf8; color: #1a5276; }
+.badge-warehouse { background: #d5f5e3; color: #1e8449; }
+.badge-general   { background: #f2f3f4; color: #555; }
+
+/* AI insight box on the insight page */
+.insight-box {
+    background: white;
+    border-left: 4px solid #4a90d9;
+    padding: 24px;
+    border-radius: 8px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Inline AJAX insight shown below the Quick Insight button */
+.insight-inline {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #eaf4ff;
+    border-left: 3px solid #4a90d9;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #333;
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+/* Flash messages (success/error after save/delete) */
+.flash-message {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
