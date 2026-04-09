@@ -1,11 +1,12 @@
 package com.ubs.delivery
 
+import grails.gorm.transactions.Transactional
 import grails.validation.ValidationException
 import static org.springframework.http.HttpStatus.*
 
 class DeliveryPointController {
     DeliveryPointService deliveryPointService
-    static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
+    static allowedMethods = [save: "POST", update: ["PUT","POST"], delete: ["DELETE","POST"]]
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
         respond deliveryPointService.list(params), model:[deliveryPointCount: deliveryPointService.count()]
@@ -16,18 +17,20 @@ class DeliveryPointController {
     def create() {
         respond new DeliveryPoint(params)
     }
-    def save(DeliveryPoint deliveryPoint) {
-        if (deliveryPoint == null) {
-            notFound()
-            return
+    @Transactional(readOnly = true)
+    def checkCode(String code) {
+        render(contentType: 'application/json') {
+            [available: !DeliveryPoint.findByCode(code)]
         }
+    }
+    def save(DeliveryPoint deliveryPoint) {
+        if (deliveryPoint == null) { notFound(); return }
         try {
             deliveryPointService.save(deliveryPoint)
         } catch (ValidationException e) {
             respond deliveryPoint.errors, view:'create'
             return
         }
-
         request.withFormat {
             form multipartForm {
                 flash.message = message(code: 'default.created.message', args: [message(code: 'deliveryPoint.label', default: 'DeliveryPoint'), deliveryPoint.id])
@@ -36,15 +39,10 @@ class DeliveryPointController {
             '*' { respond deliveryPoint, [status: CREATED] }
         }
     }
+    def edit(Long id) { respond deliveryPointService.get(id) }
 
-    def edit(Long id) {
-        respond deliveryPointService.get(id)
-    }
     def update(DeliveryPoint deliveryPoint) {
-        if (deliveryPoint == null) {
-            notFound()
-            return
-        }
+        if (deliveryPoint == null) { notFound(); return }
         try {
             deliveryPointService.save(deliveryPoint)
         } catch (ValidationException e) {
@@ -60,10 +58,7 @@ class DeliveryPointController {
         }
     }
     def delete(Long id) {
-        if (id == null) {
-            notFound()
-            return
-        }
+        if (id == null) { notFound(); return }
         deliveryPointService.delete(id)
         request.withFormat {
             form multipartForm {

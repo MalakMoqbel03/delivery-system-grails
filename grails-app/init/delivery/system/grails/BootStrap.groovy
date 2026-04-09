@@ -3,10 +3,32 @@ package delivery.system.grails
 import com.ubs.delivery.DeliveryPoint
 import com.ubs.delivery.Warehouse
 import com.ubs.delivery.Location
+import com.ubs.delivery.User
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 class BootStrap {
 
     def init = { servletContext ->
+
+        if (User.count() == 0) {
+            def encoder = new BCryptPasswordEncoder(10)
+
+            new User(
+                    username: 'admin',
+                    password: encoder.encode('admin123'),
+                    role: 'ADMIN',
+                    enabled: true
+            ).save(failOnError: true, flush: true)
+
+            new User(
+                    username: 'user',
+                    password: encoder.encode('user123'),
+                    role: 'USER',
+                    enabled: true
+            ).save(failOnError: true, flush: true)
+
+            println ">>> BootStrap: created default users (admin / user)"
+        }
 
         if (Location.count() == 0) {
 
@@ -82,7 +104,7 @@ class BootStrap {
                     currentLoad: 80
             ).save(failOnError: true)
 
-            println ">>> BootStrap: seeded ${Location.count()} locations"
+            println ">>> BootStrap: seeded ${Location.executeQuery("select count(l) from Location l")[0] as int} locations"
         }
     }
 

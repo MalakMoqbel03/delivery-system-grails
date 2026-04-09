@@ -2,54 +2,69 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>High Priority Deliveries</title>
-    <asset:stylesheet src="delivery.css"/>
+    <title>High Priority Delivery Points</title>
+    <asset:stylesheet src="dashboard.css"/>
 </head>
 <body>
+<div class="ds-dashboard">
+    <div class="ds-header-row">
+        <div>
+            <h1 class="ds-title">High Priority Deliveries</h1>
+            <p class="ds-subtitle mb-0">Delivery points that require immediate attention.</p>
+        </div>
+        <div class="ds-header-actions">
+            <g:link action="index" class="ds-btn ds-btn-secondary">← Back to all</g:link>
+            <g:link controller="dashboard" action="index" class="ds-btn ds-btn-secondary">Dashboard</g:link>
+        </div>
+    </div>
 
-<h1>🔴 High Priority Delivery Points</h1>
-<g:link action="index" class="btn btn-secondary" style="margin-bottom:16px;display:inline-block;">
-    ← Back to all locations
-</g:link>
+    <div class="ds-card">
+        <div class="ds-card-header">
+            <div>
+                <h2 class="ds-card-title mb-0">Urgent Delivery Points</h2>
+                <div class="ds-card-subtitle">All HIGH priority destinations</div>
+            </div>
+        </div>
 
-<table id="locationTable">
-    <thead>
-    <tr>
-        <th>Code</th>
-        <th>Name</th>
-        <th>Delivery Area</th>
-        <th>Priority</th>
-        <th>Coordinates</th>
-        <th>Distance from HQ</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <g:each in="${deliveryList}" var="dp">
-        <g:set var="dist" value="${String.format('%.2f', Math.sqrt(dp.x * dp.x + dp.y * dp.y))}"/>
-        <tr class="high-priority">
-            <td><strong>${dp.code}</strong></td>
-            <td>${dp.name}</td>
-            <td>${dp.deliveryArea}</td>
-            <td><span class="priority priority-high">${dp.priority}</span></td>
-            <td>(${dp.x}, ${dp.y})</td>
-            <td><strong>${dist} km</strong></td>
-            <td>
-                <g:link controller="location" action="insight" id="${dp.id}" class="btn btn-sm btn-info">AI Insight</g:link>
-                <g:link controller="deliveryPoint" action="show" id="${dp.id}" class="btn btn-sm">View</g:link>
-                <g:link controller="deliveryPoint" action="edit" id="${dp.id}" class="btn btn-sm">Edit</g:link>
-            </td>
-        </tr>
-    </g:each>
-    <g:if test="${!deliveryList}">
-        <tr>
-            <td colspan="7" style="text-align:center;padding:20px;color:#888;">
-                No HIGH priority deliveries found.
-            </td>
-        </tr>
-    </g:if>
-    </tbody>
-</table>
-
+        <div class="table-responsive">
+            <table class="table ds-table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Delivery Area</th>
+                    <th>Priority</th>
+                    <th>Coordinates</th>
+                    <th>Distance from HQ</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <g:each in="${deliveryList}" var="dp">
+                    <g:set var="dist" value="${String.format('%.2f', Math.sqrt(dp.x * dp.x + dp.y * dp.y))}"/>
+                    <tr>
+                        <td><span class="ds-pill">${dp.code}</span></td>
+                        <td class="ds-td-strong">${dp.name}</td>
+                        <td class="ds-muted">${dp.deliveryArea}</td>
+                        <td><span class="ds-pill ds-pill-priority-high">${dp.priority}</span></td>
+                        <td class="ds-muted">(${dp.x}, ${dp.y})</td>
+                        <td class="fw-bold">${dist} km</td>
+                        <td class="text-end">
+                            <g:link controller="location" action="insight" id="${dp.id}" class="ds-link me-2">AI Insight</g:link>
+                            <g:link controller="deliveryPoint" action="show" id="${dp.id}" class="ds-link me-2">View</g:link>
+                            <g:link controller="deliveryPoint" action="edit" id="${dp.id}" class="ds-link">Edit</g:link>
+                        </td>
+                    </tr>
+                </g:each>
+                <g:if test="${!deliveryList}">
+                    <tr>
+                        <td colspan="7" class="ds-empty">No HIGH priority deliveries found.</td>
+                    </tr>
+                </g:if>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 </body>
 </html>

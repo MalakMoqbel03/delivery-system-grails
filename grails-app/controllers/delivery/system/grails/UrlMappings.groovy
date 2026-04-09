@@ -3,14 +3,22 @@ package delivery.system.grails
 class UrlMappings {
 
     static mappings = {
-        "/$controller/$action?/$id?(.$format)?"{
+
+        "/login" (controller: 'auth') {
+            action = [GET: 'login', POST: 'doLogin']
+        }
+        "/logout" (controller: 'auth', action: 'logout')
+
+        "/$controller/$action?/$id?(.$format)?" {
             constraints {
-                // apply constraints here
+                // id must be a number if provided — prevents "mainForm" type bugs
+                // id matches: [0-9]+
             }
         }
 
-        "/"(view:"/index")
-        "500"(view:'/error')
-        "404"(view:'/notFound')
+        "/deliveryAssignment"(resources: "deliveryAssignment")
+        "/"(controller: "dashboard", action: "index")
+        "500"(view: '/error')
+        "404"(view: '/notFound')
     }
 }

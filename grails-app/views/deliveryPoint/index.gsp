@@ -2,69 +2,112 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>All Delivery Points</title>
-    <asset:stylesheet src="delivery.css"/>
+    <title>Delivery Points</title>
+    <asset:stylesheet src="dashboard.css"/>
 </head>
 <body>
-
-<h1>All Delivery Points</h1>
-
-<g:if test="${flash.message}">
-    <div class="flash-message">${flash.message}</div>
-</g:if>
-
-<div class="nav-buttons">
-    <g:link controller="location" action="index"  class="btn btn-secondary">← All Locations</g:link>
-    <g:link action="create"                        class="btn btn-primary">+ Add Delivery Point</g:link>
-</div>
-
-<table id="locationTable">
-    <thead>
-    <tr>
-        <th>Code</th>
-        <th>Name</th>
-        <th>Delivery Area</th>
-        <th>Priority</th>
-        <th>Coordinates</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <g:each in="${deliveryPointList}" var="dp">
-        <g:set var="rowClass" value="${dp.priority == 'HIGH' ? 'high-priority' : ''}"/>
-        <tr class="${rowClass}">
-            <td><strong>${dp.code}</strong></td>
-            <td>${dp.name}</td>
-            <td>${dp.deliveryArea}</td>
-            <td><span class="priority priority-${dp.priority.toLowerCase()}">${dp.priority}</span></td>
-            <td>(${dp.x}, ${dp.y})</td>
-            <td>
-                <g:link controller="location" action="insight" id="${dp.id}" class="btn btn-sm btn-info">AI Insight</g:link>
-                <g:link action="show" id="${dp.id}" class="btn btn-sm">View</g:link>
-                <g:link action="edit" id="${dp.id}" class="btn btn-sm">Edit</g:link>
-                <g:form action="delete" method="POST" style="display:inline">
-                    <g:hiddenField name="id" value="${dp.id}"/>
-                    <button type="submit" class="btn btn-sm btn-delete"
-                            onclick="return confirm('Delete ${dp.name}?')">Delete</button>
-                </g:form>
-            </td>
-        </tr>
-    </g:each>
-    <g:if test="${!deliveryPointList}">
-        <tr>
-            <td colspan="6" style="text-align:center;padding:30px;color:#888;">
-                No delivery points yet. <g:link action="create">Add one now.</g:link>
-            </td>
-        </tr>
-    </g:if>
-    </tbody>
-</table>
-
-<g:if test="${deliveryPointCount > params.int('max')}">
-    <div style="margin-top:16px;">
-        <g:paginate total="${deliveryPointCount ?: 0}"/>
+<div class="container-fluid ds-dashboard py-4">
+    <div class="ds-header-row">
+        <div>
+            <div class="ds-title">Delivery Points</div>
+            <div class="ds-subtitle">All registered delivery destinations.</div>
+        </div>
+        <div class="ds-header-actions">
+            <g:link controller="deliveryPoint" action="create" class="ds-btn ds-btn-primary">+ New Delivery Point</g:link>
+            <g:link controller="dashboard" action="index" class="ds-btn ds-btn-secondary">Dashboard</g:link>
+        </div>
     </div>
-</g:if>
 
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="ds-sidebar">
+                <div class="ds-sidebar-section">
+                    <div class="ds-sidebar-label">Overview</div>
+                    <g:link controller="dashboard" action="index" class="ds-nav-link">
+                        <span class="ds-nav-dot"></span> Dashboard
+                    </g:link>
+                </div>
+                <div class="ds-sidebar-section">
+                    <div class="ds-sidebar-label">Management</div>
+                    <g:link controller="warehouse" action="index" class="ds-nav-link">
+                        <span class="ds-nav-dot"></span> Warehouses
+                    </g:link>
+                    <g:link controller="deliveryPoint" action="index" class="ds-nav-link active">
+                        <span class="ds-nav-dot"></span> Delivery Points
+                    </g:link>
+                    <g:link controller="location" action="index" class="ds-nav-link">
+                        <span class="ds-nav-dot"></span> Locations
+                    </g:link>
+                    <g:link controller="deliveryAssignment" action="index" class="ds-nav-link">
+                        <span class="ds-nav-dot"></span> Assignments
+                    </g:link>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="ds-card">
+                <div class="ds-card-header">
+                    <div>
+                        <div class="ds-card-title">Delivery Point List</div>
+                        <div class="ds-card-subtitle">Use the navbar search to find specific points</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table ds-table align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Area</th>
+                            <th>Priority</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <g:if test="${deliveryPointList}">
+                            <g:each in="${deliveryPointList}" var="deliveryPoint">
+                                <tr class="ds-fade-up">
+                                    <td class="ds-td-strong">
+                                        <g:link controller="deliveryPoint" action="show" id="${deliveryPoint.id}">
+                                            ${deliveryPoint.name}
+                                        </g:link>
+                                    </td>
+                                    <td>${deliveryPoint.code}</td>
+                                    <td>${deliveryPoint.deliveryArea}</td>
+                                    <td>
+                                        <span class="ds-pill ds-pill-${deliveryPoint.priority}">
+                                            ${deliveryPoint.priority}
+                                        </span>
+                                    </td>
+                                    <td>${deliveryPoint.x}</td>
+                                    <td>${deliveryPoint.y}</td>
+                                    <td>
+                                        <g:link controller="deliveryPoint" action="show" id="${deliveryPoint.id}" class="ds-link me-2">View</g:link>
+                                        <g:link controller="deliveryPoint" action="edit" id="${deliveryPoint.id}" class="ds-link me-2">Edit</g:link>
+                                        <g:form action="delete" controller="deliveryPoint" method="POST" style="display:inline;">
+                                            <g:hiddenField name="id" value="${deliveryPoint.id}"/>
+                                            <button type="submit" class="ds-btn-danger-inline"
+                                                    onclick="return confirm('Delete ${deliveryPoint.name}?')">Delete</button>
+                                        </g:form>
+                                    </td>
+                                </tr>
+                            </g:each>
+                        </g:if>
+                        <g:else>
+                            <tr>
+                                <td colspan="7" class="ds-empty">No delivery points found.</td>
+                            </tr>
+                        </g:else>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

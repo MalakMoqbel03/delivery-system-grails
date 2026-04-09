@@ -3,77 +3,76 @@
 <head>
     <meta name="layout" content="main"/>
     <title>Warehouse — ${warehouse?.name}</title>
-    <asset:stylesheet src="delivery.css"/>
+    <asset:stylesheet src="dashboard.css"/>
 </head>
 <body>
+<div class="ds-dashboard">
+    <div class="ds-header-row">
+        <div>
+            <h1 class="ds-title">${warehouse?.name}</h1>
+            <p class="ds-subtitle mb-0">Warehouse detail view</p>
+        </div>
+        <div class="ds-header-actions">
+            <g:link action="index" class="ds-btn ds-btn-secondary">← Back</g:link>
+            <g:link action="edit" id="${warehouse?.id}" class="ds-btn ds-btn-primary">Edit</g:link>
+            <g:link controller="location" action="insight" id="${warehouse?.id}" class="ds-btn ds-btn-secondary">AI Insight</g:link>
+        </div>
+    </div>
 
-<h1>Warehouse: ${warehouse?.name}</h1>
+    <g:if test="${flash.message}">
+        <div class="ds-flash mb-3">${flash.message}</div>
+    </g:if>
 
-<div class="nav-buttons">
-    <g:link action="index" class="btn btn-secondary">← Back to list</g:link>
-    <g:link action="edit" id="${warehouse?.id}" class="btn btn-primary">✏️ Edit</g:link>
-    <g:link controller="location" action="insight" id="${warehouse?.id}" class="btn btn-info">🤖 AI Insight</g:link>
-</div>
-
-<g:if test="${flash.message}">
-    <div class="flash-message">${flash.message}</div>
-</g:if>
-
-<g:set var="pct" value="${warehouse ? (int)((warehouse.currentLoad / warehouse.maxCapacity) * 100) : 0}"/>
-
-<div style="background:white;padding:24px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);max-width:500px;margin-top:16px;">
-    <table style="width:100%;border-collapse:collapse;">
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;width:140px;">Code</td>
-            <td style="padding:10px;font-weight:bold;">${warehouse?.code}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;">Name</td>
-            <td style="padding:10px;">${warehouse?.name}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;">Current Load</td>
-            <td style="padding:10px;">${warehouse?.currentLoad} units</td>
-        </tr>
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;">Max Capacity</td>
-            <td style="padding:10px;">${warehouse?.maxCapacity} units</td>
-        </tr>
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;">Capacity</td>
-            <td style="padding:10px;">
-                <div style="background:#eee;border-radius:8px;height:16px;width:200px;display:inline-block;vertical-align:middle;">
-                    <div style="background:${pct >= 100 ? '#e67e22' : '#27ae60'};height:16px;border-radius:8px;width:${Math.min(pct,100)}%;"></div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="ds-card">
+                <div class="ds-card-header">
+                    <h2 class="ds-card-title mb-0">Details</h2>
                 </div>
-                <span style="margin-left:8px;">${pct}%</span>
-            </td>
-        </tr>
-        <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:10px;color:#888;">Status</td>
-            <td style="padding:10px;">
-                <g:if test="${warehouse?.hasSpace()}">
-                    <span style="color:#27ae60;font-weight:bold;">✅ Has space available</span>
-                </g:if>
-                <g:else>
-                    <span style="color:#e67e22;font-weight:bold;">⚠️ FULL</span>
-                </g:else>
-            </td>
-        </tr>
-        <tr>
-            <td style="padding:10px;color:#888;">Coordinates</td>
-            <td style="padding:10px;">(${warehouse?.x}, ${warehouse?.y})</td>
-        </tr>
-    </table>
+                <g:set var="pct" value="${warehouse ? (int)((warehouse.currentLoad / warehouse.maxCapacity) * 100) : 0}"/>
+                <table class="ds-detail-table">
+                    <tr><td class="ds-detail-label">Code</td><td class="ds-detail-value fw-bold">${warehouse?.code}</td></tr>
+                    <tr><td class="ds-detail-label">Name</td><td class="ds-detail-value">${warehouse?.name}</td></tr>
+                    <tr><td class="ds-detail-label">Current Load</td><td class="ds-detail-value">${warehouse?.currentLoad} units</td></tr>
+                    <tr><td class="ds-detail-label">Max Capacity</td><td class="ds-detail-value">${warehouse?.maxCapacity} units</td></tr>
+                    <tr>
+                        <td class="ds-detail-label">Capacity</td>
+                        <td class="ds-detail-value">
+                            <div class="ds-bar-row-top mb-1">
+                                <span class="ds-bar-label">${pct}% used</span>
+                            </div>
+                            <div class="ds-progress" style="width:200px;">
+                                <div class="ds-progress-fill ${pct >= 90 ? 'ds-progress-fill-high' : (pct >= 65 ? 'ds-progress-fill-medium' : 'ds-progress-fill-low')}"
+                                     style="width:${Math.min(pct,100)}%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ds-detail-label">Status</td>
+                        <td class="ds-detail-value">
+                            <g:if test="${warehouse?.hasSpace()}">
+                                <span class="ds-pill ds-pill-priority-low">Has space available</span>
+                            </g:if>
+                            <g:else>
+                                <span class="ds-pill ds-pill-priority-high">FULL</span>
+                            </g:else>
+                        </td>
+                    </tr>
+                    <tr><td class="ds-detail-label">Coordinates</td><td class="ds-detail-value ds-muted">(${warehouse?.x}, ${warehouse?.y})</td></tr>
+                </table>
 
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;">
-        <g:form resource="${this.warehouse}" controller="warehouse" method="DELETE" style="display:inline;">
-            <button type="submit" class="btn btn-delete"
-                    onclick="return confirm('Are you sure you want to delete ${warehouse?.name}?')">
-                🗑 Delete
-            </button>
-        </g:form>
+                <div class="ds-card-footer mt-3 pt-3">
+                    <g:form action="delete" controller="warehouse" method="POST" style="display:inline;">
+                        <g:hiddenField name="id" value="${warehouse?.id}"/>
+                        <button type="submit" class="ds-btn ds-btn-danger"
+                                onclick="return confirm('Are you sure you want to delete ${warehouse?.name}?')">
+                            Delete Warehouse
+                        </button>
+                    </g:form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
 </body>
 </html>

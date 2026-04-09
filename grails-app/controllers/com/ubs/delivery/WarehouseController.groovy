@@ -1,5 +1,7 @@
 package com.ubs.delivery
+import grails.converters.JSON
 
+import grails.gorm.transactions.Transactional
 import grails.validation.ValidationException
 import static org.springframework.http.HttpStatus.*
 
@@ -7,34 +9,30 @@ class WarehouseController {
 
     WarehouseService warehouseService
 
-    static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
+    static allowedMethods = [save: "POST", update: ["PUT","POST"], delete: ["DELETE","POST"]]
 
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
         respond warehouseService.list(params), model:[warehouseCount: warehouseService.count()]
     }
 
-    def show(Long id) {
-        respond warehouseService.get(id)
-    }
+    def show(Long id) { respond warehouseService.get(id) }
+    def create() { respond new Warehouse(params) }
 
-    def create() {
-        respond new Warehouse(params)
+    @Transactional(readOnly = true)
+    def checkCode(String code) {
+        def available = !Warehouse.findByCode(code)
+        render([available: available] as JSON)
     }
 
     def save(Warehouse warehouse) {
-        if (warehouse == null) {
-            notFound()
-            return
-        }
-
+        if (warehouse == null) { notFound(); return }
         try {
             warehouseService.save(warehouse)
         } catch (ValidationException e) {
             respond warehouse.errors, view:'create'
             return
         }
-
         request.withFormat {
             form multipartForm {
                 flash.message = message(code: 'default.created.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
@@ -44,23 +42,16 @@ class WarehouseController {
         }
     }
 
-    def edit(Long id) {
-        respond warehouseService.get(id)
-    }
+    def edit(Long id) { respond warehouseService.get(id) }
 
     def update(Warehouse warehouse) {
-        if (warehouse == null) {
-            notFound()
-            return
-        }
-
+        if (warehouse == null) { notFound(); return }
         try {
             warehouseService.save(warehouse)
         } catch (ValidationException e) {
             respond warehouse.errors, view:'edit'
             return
         }
-
         request.withFormat {
             form multipartForm {
                 flash.message = message(code: 'default.updated.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
@@ -71,11 +62,7 @@ class WarehouseController {
     }
 
     def delete(Long id) {
-        if (id == null) {
-            notFound()
-            return
-        }
-
+        if (id == null) { notFound(); return }
         warehouseService.delete(id)
         request.withFormat {
             form multipartForm {
@@ -85,6 +72,7 @@ class WarehouseController {
             '*'{ render status: NO_CONTENT }
         }
     }
+
     protected void notFound() {
         request.withFormat {
             form multipartForm {

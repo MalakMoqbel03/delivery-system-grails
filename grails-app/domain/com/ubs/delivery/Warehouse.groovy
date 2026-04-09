@@ -2,7 +2,7 @@ package com.ubs.delivery
 
 
 class Warehouse extends Location {
-
+    static hasMany = [assignments: DeliveryAssignment]
     Integer maxCapacity
     Integer currentLoad
 

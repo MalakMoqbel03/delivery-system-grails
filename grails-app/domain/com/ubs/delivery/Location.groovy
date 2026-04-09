@@ -13,6 +13,9 @@ class Location {
         x    nullable: false
         y    nullable: false
     }
+    static mapping = {
+        table("Location")
+    }
 
     @Override
     String toString() {

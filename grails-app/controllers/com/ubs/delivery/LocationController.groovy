@@ -1,18 +1,23 @@
 package com.ubs.delivery
 
+import grails.converters.JSON
 import grails.validation.ValidationException
 import static org.springframework.http.HttpStatus.*
 
 class LocationController {
     LocationService locationService
-    static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
+    static allowedMethods = [save: "POST", update: ["PUT","POST"], delete: ["DELETE","POST"]]
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
-        respond locationService.list(params), model: [locationCount: locationService.count()]
+        def locationList  = locationService.list(params)
+        def locationCount = locationService.count()
+        [locationList: locationList, locationCount: locationCount]
     }
 
     def show(Long id) {
-        respond locationService.get(id)
+        def loc = locationService.get(id)
+        if (!loc) { notFound(); return }
+        [location: loc]
     }
 
     def create() {
@@ -20,90 +25,64 @@ class LocationController {
     }
 
     def save(Location location) {
-        if (location == null) {
-            notFound()
-            return
-        }
-
+        if (location == null) { notFound(); return }
         try {
             locationService.save(location)
         } catch (ValidationException e) {
             respond location.errors, view: 'create'
             return
         }
-
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.created.message', args: [message(code: 'location.label', default: 'Location'), location.id])
-                redirect location
-            }
-            '*' { respond location, [status: CREATED] }
-        }
+        flash.message = "Location '${location.name}' created."
+        redirect action: "index"
     }
 
     def edit(Long id) {
-        respond locationService.get(id)
+        def loc = locationService.get(id)
+        if (!loc) { notFound(); return }
+        [location: loc]
     }
 
     def update(Location location) {
-        if (location == null) {
-            notFound()
-            return
-        }
-
+        if (location == null) { notFound(); return }
         try {
             locationService.save(location)
         } catch (ValidationException e) {
             respond location.errors, view: 'edit'
             return
         }
-
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.updated.message', args: [message(code: 'location.label', default: 'Location'), location.id])
-                redirect location
-            }
-            '*' { respond location, [status: OK] }
-        }
+        flash.message = "Location '${location.name}' updated."
+        redirect action: "index"
     }
 
     def delete(Long id) {
-        if (id == null) {
-            notFound()
-            return
-        }
-
+        if (id == null) { notFound(); return }
         locationService.delete(id)
-
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.deleted.message', args: [message(code: 'location.label', default: 'Location'), id])
-                redirect action: "index", method: "GET"
-            }
-            '*' { render status: NO_CONTENT }
-        }
+        flash.message = "Location deleted."
+        redirect action: "index", method: "GET"
     }
+
+
+
+    def search() {
+        String q = params.q
+        def results = locationService.search(q)
+        render results as JSON
+    }
+
+
     def highPriority() {
-        def results = DeliveryPoint.findAllByPriority('HIGH')
-        [deliveryList: results]
+        def results = locationService.getHighPriorityDeliveries()
+        [highPriorityPoints: results, deliveryList: results]
     }
     def warehousesWithSpace() {
-        def results = Warehouse.withCriteria {
-            ltProperty('currentLoad', 'maxCapacity')
-            order('name', 'asc')
-        }
+        def results = locationService.getWarehousesWithSpace()
         [warehouseList: results]
     }
-    def hqlExample() {
-        def results = DeliveryPoint.executeQuery(
-                "from DeliveryPoint where priority = :p order by name",
-                [p: 'HIGH']
-        )
-        [deliveryList: results]
-    }
+
     def sortedByDistance() {
         [locationList: locationService.getAllSortedByDistance()]
     }
+
     def insight(Long id) {
         def location = Location.get(id)
         if (!location) {
@@ -111,27 +90,21 @@ class LocationController {
             redirect action: 'index'
             return
         }
-        String insight = locationService.getAIInsight(location)
-        [location: location, insight: insight]
+        [location: location, insight: locationService.getAIInsight(location)]
     }
+
     def ajaxInsight(Long id) {
         def location = Location.get(id)
-        if (!location) {
-            render status: 404, text: "Location not found"
-            return
-        }
+        if (!location) { render status: 404, text: "Location not found"; return }
         render locationService.getAIInsight(location)
     }
+
     def history() {
         [logList: AIQueryLog.list()]
     }
+
     protected void notFound() {
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.not.found.message', args: [message(code: 'location.label', default: 'Location'), params.id])
-                redirect action: "index", method: "GET"
-            }
-            '*' { render status: NOT_FOUND }
-        }
+        flash.message = "Location not found"
+        redirect action: "index", method: "GET"
     }
 }

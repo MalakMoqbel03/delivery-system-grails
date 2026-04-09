@@ -2,59 +2,75 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>Warehouses with Space</title>
-    <asset:stylesheet src="delivery.css"/>
+    <title>Warehouses with Available Space</title>
+    <asset:stylesheet src="dashboard.css"/>
 </head>
 <body>
+<div class="ds-dashboard">
+    <div class="ds-header-row">
+        <div>
+            <h1 class="ds-title">Warehouses with Space</h1>
+            <p class="ds-subtitle mb-0">Storage facilities that can still accept new loads.</p>
+        </div>
+        <div class="ds-header-actions">
+            <g:link action="index" class="ds-btn ds-btn-secondary">← All Locations</g:link>
+            <g:link controller="warehouse" action="create" class="ds-btn ds-btn-primary">+ New Warehouse</g:link>
+        </div>
+    </div>
 
-<h1>Warehouses with Available Space</h1>
-<g:link action="index" class="btn btn-secondary" style="margin-bottom:16px;display:inline-block;">
-    ← Back to all locations
-</g:link>
+    <div class="ds-card">
+        <div class="ds-card-header mb-2">
+            <h2 class="ds-card-title mb-0">Available Warehouses</h2>
+            <div class="ds-card-subtitle">Sorted by remaining capacity</div>
+        </div>
 
-<table id="locationTable">
-    <thead>
-    <tr>
-        <th>Code</th>
-        <th>Name</th>
-        <th>Current Load</th>
-        <th>Max Capacity</th>
-        <th>Space Available</th>
-        <th>Coordinates</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <g:each in="${warehouseList}" var="wh">
-        <g:set var="pct" value="${(int)((wh.currentLoad / wh.maxCapacity) * 100)}"/>
-        <tr>
-            <td><strong>${wh.code}</strong></td>
-            <td>${wh.name}</td>
-            <td>${wh.currentLoad}</td>
-            <td>${wh.maxCapacity}</td>
-            <td>
-                <div style="background:#eee;border-radius:8px;height:14px;width:120px;display:inline-block;vertical-align:middle;">
-                    <div style="background:#27ae60;height:14px;border-radius:8px;width:${pct}%;"></div>
-                </div>
-                <span style="font-size:12px;margin-left:6px;">${pct}% full</span>
-            </td>
-            <td>(${wh.x}, ${wh.y})</td>
-            <td>
-                <g:link controller="location" action="insight" id="${wh.id}" class="btn btn-sm btn-info">AI Insight</g:link>
-                <g:link controller="warehouse" action="show" id="${wh.id}" class="btn btn-sm">View</g:link>
-                <g:link controller="warehouse" action="edit" id="${wh.id}" class="btn btn-sm">Edit</g:link>
-            </td>
-        </tr>
-    </g:each>
-    <g:if test="${!warehouseList}">
-        <tr>
-            <td colspan="7" style="text-align:center;padding:20px;color:#888;">
-                No warehouses with available space found.
-            </td>
-        </tr>
-    </g:if>
-    </tbody>
-</table>
-
+        <div class="table-responsive">
+            <table class="table ds-table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Load</th>
+                    <th>Capacity Usage</th>
+                    <th>Coordinates</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <g:each in="${warehouseList}" var="wh">
+                    <g:set var="pct" value="${(int)((wh.currentLoad / wh.maxCapacity) * 100)}"/>
+                    <tr>
+                        <td><span class="ds-pill">${wh.code}</span></td>
+                        <td class="ds-td-strong">
+                            <g:link controller="warehouse" action="show" id="${wh.id}">${wh.name}</g:link>
+                        </td>
+                        <td class="ds-muted">${wh.currentLoad} / ${wh.maxCapacity}</td>
+                        <td style="min-width:180px;">
+                            <div class="ds-bar-row-top">
+                                <span class="ds-bar-label">${pct}% full</span>
+                            </div>
+                            <div class="ds-progress">
+                                <div class="ds-progress-fill ${pct >= 65 ? 'ds-progress-fill-medium' : 'ds-progress-fill-low'}"
+                                     style="width:${pct}%;"></div>
+                            </div>
+                        </td>
+                        <td class="ds-muted">(${wh.x}, ${wh.y})</td>
+                        <td class="text-end">
+                            <g:link controller="location" action="insight" id="${wh.id}" class="ds-link me-2">AI Insight</g:link>
+                            <g:link controller="warehouse" action="show" id="${wh.id}" class="ds-link me-2">View</g:link>
+                            <g:link controller="warehouse" action="edit" id="${wh.id}" class="ds-link">Edit</g:link>
+                        </td>
+                    </tr>
+                </g:each>
+                <g:if test="${!warehouseList}">
+                    <tr>
+                        <td colspan="6" class="ds-empty">No warehouses with available space found.</td>
+                    </tr>
+                </g:if>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 </body>
 </html>

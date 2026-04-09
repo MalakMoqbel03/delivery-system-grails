@@ -2,159 +2,178 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>All Locations</title>
-    <asset:stylesheet src="delivery.css"/>
+    <title>Locations</title>
+    <asset:stylesheet src="dashboard.css"/>
 </head>
 <body>
+<div class="ds-dashboard">
+    <div class="ds-header-row">
+        <div>
+            <h1 class="ds-title">Locations</h1>
+            <p class="ds-subtitle mb-0">Unified view of all warehouses and delivery points.</p>
+        </div>
+        <div class="ds-header-actions">
+            <g:link controller="location" action="create" class="ds-btn ds-btn-primary">+ New Location</g:link>
+            <g:link controller="dashboard" action="index" class="ds-btn ds-btn-secondary">Dashboard</g:link>
+        </div>
+    </div>
 
-<h1>Delivery System — All Locations</h1>
+    <div class="row g-4">
+        <aside class="col-12 col-lg-3">
+            <nav class="ds-sidebar" aria-label="App navigation">
+                <div class="ds-sidebar-section">
+                    <div class="ds-sidebar-label">Overview</div>
+                    <g:link class="ds-nav-link" controller="dashboard" action="index">
+                        <span class="ds-nav-dot"></span> Dashboard
+                    </g:link>
+                </div>
+                <div class="ds-sidebar-section">
+                    <div class="ds-sidebar-label">Operations</div>
+                    <g:link class="ds-nav-link" controller="deliveryAssignment" action="index">
+                        <span class="ds-nav-dot"></span> Assignments
+                    </g:link>
+                    <g:link class="ds-nav-link" controller="warehouse" action="index">
+                        <span class="ds-nav-dot"></span> Warehouses
+                    </g:link>
+                    <g:link class="ds-nav-link" controller="deliveryPoint" action="index">
+                        <span class="ds-nav-dot"></span> Delivery Points
+                    </g:link>
+                    <g:link class="ds-nav-link active" controller="location" action="index">
+                        <span class="ds-nav-dot"></span> Locations
+                    </g:link>
+                </div>
+                <div class="ds-sidebar-section">
+                    <div class="ds-sidebar-label">Views</div>
+                    <g:link class="ds-nav-link" controller="location" action="sortedByDistance">
+                        <span class="ds-nav-dot"></span> By Distance
+                    </g:link>
+                    <g:link class="ds-nav-link" controller="location" action="warehousesWithSpace">
+                        <span class="ds-nav-dot"></span> With Space
+                    </g:link>
+                    <g:link class="ds-nav-link" controller="location" action="highPriority">
+                        <span class="ds-nav-dot"></span> High Priority
+                    </g:link>
+                    <g:link class="ds-nav-link" controller="location" action="history">
+                        <span class="ds-nav-dot"></span> AI History
+                    </g:link>
+                </div>
+            </nav>
+        </aside>
 
-<g:if test="${flash.message}">
-    <div class="flash-message">${flash.message}</div>
-</g:if>
+        <main class="col-12 col-lg-9">
 
-<!-- Phase 6: Navigation buttons — each calls a controller action -->
-<div class="nav-buttons">
-    <g:link action="highPriority"        class="btn btn-danger">🔴 High Priority</g:link>
-    <g:link action="warehousesWithSpace" class="btn btn-success">🟢 Warehouses with Space</g:link>
-    <g:link action="sortedByDistance"    class="btn btn-info">📍 Sort by Distance</g:link>
-    <g:link action="history"             class="btn btn-secondary">📋 AI History</g:link>
-    <g:link controller="deliveryPoint"   action="create" class="btn btn-primary">+ Add Delivery Point</g:link>
-    <g:link controller="warehouse"       action="create" class="btn btn-primary">+ Add Warehouse</g:link>
+            <g:if test="${flash.message}">
+                <div class="ds-flash mb-3">${flash.message}</div>
+            </g:if>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="ds-card">
+                        <div class="ds-card-title">Total Locations</div>
+                        <%-- locationCount comes from LocationController.index() --%>
+                        <div class="ds-kpi-value mt-2">${locationCount ?: 0}</div>
+                        <div class="ds-card-subtitle">All registered sites</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="ds-card">
+                        <div class="ds-card-title">AI Insight</div>
+                        <div class="ds-kpi-value mt-2" style="font-size:20px;">Enabled</div>
+                        <div class="ds-card-subtitle">Click any location for analysis</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ds-card">
+                <div class="ds-card-header">
+                    <div>
+                        <h2 class="ds-card-title mb-0">Location Directory</h2>
+                        <div class="ds-card-subtitle">All warehouses and delivery points</div>
+                    </div>
+                    <%--
+                        Search input is now just a UI filter over already-rendered rows.
+                        The real server-side search lives in LocationService.search()
+                        and is called by the navbar via /location/search?q=.
+                    --%>
+                    <div class="ds-search-wrap">
+                        <input id="locationSearch" type="search" class="ds-search" placeholder="Filter list…"/>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table ds-table align-middle mb-0" id="locationTable">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Coordinates</th>
+                            <th>Type</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="locationTableBody">
+                        <tr><td colspan="5" class="ds-empty">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
-
-<!-- Phase 9: JavaScript filter controls -->
-<div class="filter-row">
-    <input type="text" id="searchBox" placeholder="Filter by name..." onkeyup="filterTable()"/>
-    <button id="toggleBtn" onclick="toggleHighPriority()" class="btn btn-danger">
-        Show HIGH Priority Only
-    </button>
-</div>
-
-<!-- Phase 7: Main locations table -->
-<table id="locationTable">
-    <thead>
-    <tr>
-        <th>Code</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Details</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <g:each in="${locationList}" var="loc">
-        <%-- Phase 8: CSS row class based on type and priority --%>
-        <g:set var="rowClass" value=""/>
-        <g:if test="${loc instanceof com.ubs.delivery.DeliveryPoint && loc.priority == 'HIGH'}">
-            <g:set var="rowClass" value="high-priority"/>
-        </g:if>
-        <g:if test="${loc instanceof com.ubs.delivery.Warehouse && !loc.hasSpace()}">
-            <g:set var="rowClass" value="warehouse-full"/>
-        </g:if>
-
-        <tr class="${rowClass}" data-priority="${loc instanceof com.ubs.delivery.DeliveryPoint ? loc.priority : ''}" data-name="${loc.name.toLowerCase()}">
-            <td><strong>${loc.code}</strong></td>
-            <td>${loc.name}</td>
-
-            <td>
-                <g:if test="${loc instanceof com.ubs.delivery.DeliveryPoint}">
-                    <span class="badge badge-delivery">Delivery Point</span>
-                </g:if>
-                <g:elseif test="${loc instanceof com.ubs.delivery.Warehouse}">
-                    <span class="badge badge-warehouse">Warehouse</span>
-                </g:elseif>
-                <g:else>
-                    <span class="badge badge-general">General</span>
-                </g:else>
-            </td>
-
-            <td>
-                <g:if test="${loc instanceof com.ubs.delivery.DeliveryPoint}">
-                    Area: ${loc.deliveryArea} |
-                    <span class="priority priority-${loc.priority.toLowerCase()}">${loc.priority}</span>
-                </g:if>
-                <g:elseif test="${loc instanceof com.ubs.delivery.Warehouse}">
-                    ${loc.currentLoad}/${loc.maxCapacity} units
-                    <g:if test="${!loc.hasSpace()}"><strong> — FULL</strong></g:if>
-                    <g:else> — has space</g:else>
-                </g:elseif>
-                <g:else>
-                    (${loc.x}, ${loc.y})
-                </g:else>
-            </td>
-
-            <td>
-                <%-- Phase 10: AJAX Quick Insight button --%>
-                <button class="btn btn-sm btn-info"
-                        onclick="getInsightAjax(${loc.id}, this)">Quick Insight</button>
-                <div id="insight-${loc.id}" class="insight-inline" style="display:none;"></div>
-
-                <g:link action="insight" id="${loc.id}" class="btn btn-sm">Full Insight</g:link>
-                <g:link action="show"    id="${loc.id}" class="btn btn-sm">View</g:link>
-                <g:link action="edit"    id="${loc.id}" class="btn btn-sm">Edit</g:link>
-                <g:form action="delete" method="POST" style="display:inline">
-                    <g:hiddenField name="id" value="${loc.id}"/>
-                    <button type="submit" class="btn btn-sm btn-delete"
-                            onclick="return confirm('Delete ${loc.name}?')">Delete</button>
-                </g:form>
-            </td>
-        </tr>
-    </g:each>
-    <g:if test="${!locationList}">
-        <tr>
-            <td colspan="5" style="text-align:center;padding:30px;color:#888;">
-                No locations found. Add a Delivery Point or Warehouse to get started.
-            </td>
-        </tr>
-    </g:if>
-    </tbody>
-</table>
 
 <script>
-    /* Phase 9 — filter by name as user types */
-    function filterTable() {
-        const query = document.getElementById('searchBox').value.toLowerCase();
-        document.querySelectorAll('#locationTable tbody tr[data-name]').forEach(function(row) {
-            row.style.display = row.getAttribute('data-name').includes(query) ? '' : 'none';
-        });
-    }
+    (function () {
+        var CTX   = '${request.contextPath ?: ""}';
+        var input = document.getElementById('locationSearch');
+        var tbody = document.getElementById('locationTableBody');
+        var debounce = null;
 
-    /* Phase 9 — toggle HIGH priority only */
-    let showingHighOnly = false;
-    function toggleHighPriority() {
-        showingHighOnly = !showingHighOnly;
-        document.querySelectorAll('#locationTable tbody tr[data-name]').forEach(function(row) {
-            if (showingHighOnly) {
-                row.style.display = row.classList.contains('high-priority') ? '' : 'none';
-            } else {
-                row.style.display = '';
+        // Rebuilds the table body from the JSON array returned by LocationService.search()
+        function renderRows(data) {
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="ds-empty">No locations found.</td></tr>';
+                return;
             }
+            tbody.innerHTML = data.map(function (loc) {
+                var typePill = loc.type === 'Warehouse'
+                    ? '<span class="ds-pill ds-pill-priority-low">Warehouse</span>'
+                    : '<span class="ds-pill ds-pill-status-pending">Delivery Point</span>';
+                var actions =
+                    '<a href="' + CTX + '/location/show/'    + loc.id + '" class="ds-link me-2">View</a>' +
+                    '<a href="' + CTX + '/location/edit/'    + loc.id + '" class="ds-link me-2">Edit</a>' +
+                    '<a href="' + CTX + '/location/insight/' + loc.id + '" class="ds-link me-2">Insight</a>' +
+                    '<form action="' + CTX + '/location/delete" method="POST" style="display:inline;">' +
+                    '  <input type="hidden" name="id" value="' + loc.id + '"/>' +
+                    '  <button type="submit" class="ds-btn-danger-inline" onclick="return confirm(\'Delete ' + loc.name.replace(/'/g,"\\'") + '?\')">Delete</button>' +
+                    '</form>';
+                return '<tr>' +
+                    '<td class="ds-td-strong">' + loc.name + '</td>' +
+                    '<td><span class="ds-pill">' + loc.code + '</span></td>' +
+                    '<td class="ds-muted">(' + loc.x + ', ' + loc.y + ')</td>' +
+                    '<td>' + typePill + '</td>' +
+                    '<td class="text-end">' + actions + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        // On page load fetch all locations (empty q = return everything)
+        fetch(CTX + '/location/search?q=')
+            .then(function (r) { return r.json(); })
+            .then(renderRows)
+            .catch(function () {});
+
+        // On keystroke debounce 250ms then fetch filtered results
+        input.addEventListener('input', function () {
+            var q = this.value.trim();
+            clearTimeout(debounce);
+            debounce = setTimeout(function () {
+                fetch(CTX + '/location/search?q=' + encodeURIComponent(q))
+                    .then(function (r) { return r.json(); })
+                    .then(renderRows)
+                    .catch(function () {});
+            }, 250);
         });
-        document.getElementById('toggleBtn').textContent =
-            showingHighOnly ? 'Show All' : 'Show HIGH Priority Only';
-    }
-
-    /* Phase 10 — AJAX: fetch insight from backend without page reload */
-    function getInsightAjax(locationId, buttonElement) {
-        buttonElement.textContent = 'Loading...';
-        buttonElement.disabled = true;
-
-        fetch('/location/ajaxInsight/' + locationId)
-            .then(function(response) { return response.text(); })
-            .then(function(text) {
-                const div = document.getElementById('insight-' + locationId);
-                div.textContent = text;
-                div.style.display = 'block';
-                buttonElement.textContent = 'Refresh Insight';
-                buttonElement.disabled = false;
-            })
-            .catch(function() {
-                buttonElement.textContent = 'Error — try again';
-                buttonElement.disabled = false;
-            });
-    }
+    })();
 </script>
-
 </body>
 </html>
