@@ -19,7 +19,7 @@
         .ds-nav-item.active { background:rgba(59,130,246,0.12); color:#1d4ed8; }
         .ds-nav-item i { font-size:14px; }
 
-        /* Search bar */
+        /* Search bar (admin only) */
         .ds-nav-search-wrap { position:relative; margin-left:auto; flex-shrink:0; }
         .ds-nav-search { width:220px; padding:7px 12px 7px 34px; border-radius:10px; border:1px solid rgba(0,0,0,0.12); font-size:13px; font-weight:600; background:#f8f9fa; transition:border-color 120ms,box-shadow 120ms,width 200ms; }
         .ds-nav-search:focus { outline:none; border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.12); width:280px; background:#fff; }
@@ -34,27 +34,12 @@
         .gsr-coords { margin-left:auto; font-size:11px; color:rgba(0,0,0,0.40); font-weight:700; }
         .gsr-empty { padding:16px 14px; color:rgba(0,0,0,0.40); font-weight:700; font-size:13px; text-align:center; }
 
-        /*
-         * USER PILL — shows the logged-in username and a logout link in the navbar.
-         * session.username is set by AuthController.doLogin() on successful login.
-         */
-        .ds-nav-user {
-            display: flex; align-items: center; gap: 8px;
-            margin-left: 12px; flex-shrink: 0;
-        }
-        .ds-nav-username {
-            font-size: 13px; font-weight: 800; color: rgba(0,0,0,0.65);
-            background: rgba(59,130,246,0.08); border-radius: 999px;
-            padding: 4px 12px;
-        }
-        .ds-nav-username i { margin-right: 4px; color: #3b82f6; }
-        .ds-nav-logout {
-            font-size: 12px; font-weight: 800; color: #dc2626;
-            text-decoration: none; padding: 4px 10px;
-            border-radius: 999px; border: 1.5px solid rgba(220,38,38,0.25);
-            transition: background 120ms;
-        }
-        .ds-nav-logout:hover { background: rgba(220,38,38,0.08); }
+        /* User pill */
+        .ds-nav-user { display:flex; align-items:center; gap:8px; margin-left:12px; flex-shrink:0; }
+        .ds-nav-username { font-size:13px; font-weight:800; color:rgba(0,0,0,0.65); background:rgba(59,130,246,0.08); border-radius:999px; padding:4px 12px; }
+        .ds-nav-username i { margin-right:4px; color:#3b82f6; }
+        .ds-nav-logout { font-size:12px; font-weight:800; color:#dc2626; text-decoration:none; padding:4px 10px; border-radius:999px; border:1.5px solid rgba(220,38,38,0.25); transition:background 120ms; }
+        .ds-nav-logout:hover { background:rgba(220,38,38,0.08); }
 
         .ds-nav-toggle { display:none; background:none; border:1px solid rgba(0,0,0,0.12); border-radius:8px; padding:6px 10px; margin-left:auto; cursor:pointer; color:rgba(0,0,0,0.65); }
         @media(max-width:768px){
@@ -73,14 +58,35 @@
         </a>
 
         <div class="ds-nav-links" id="navLinks">
-            <a href="${request.contextPath}/dashboard"           class="ds-nav-item" data-nav="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
-            <a href="${request.contextPath}/warehouse"           class="ds-nav-item" data-nav="warehouse"><i class="bi bi-boxes"></i> Warehouses</a>
-            <a href="${request.contextPath}/deliveryPoint"       class="ds-nav-item" data-nav="deliveryPoint"><i class="bi bi-truck"></i> Delivery Points</a>
-            <a href="${request.contextPath}/location"            class="ds-nav-item" data-nav="location"><i class="bi bi-pin-map"></i> Locations</a>
-            <a href="${request.contextPath}/deliveryAssignment"  class="ds-nav-item" data-nav="deliveryAssignment"><i class="bi bi-list-check"></i> Assignments</a>
+
+            <%-- ── ADMIN navigation ── --%>
+            <g:if test="${session.role == 'ADMIN'}">
+                <a href="${request.contextPath}/dashboard"           class="ds-nav-item" data-nav="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a href="${request.contextPath}/warehouse"           class="ds-nav-item" data-nav="warehouse"><i class="bi bi-boxes"></i> Warehouses</a>
+                <a href="${request.contextPath}/deliveryPoint"       class="ds-nav-item" data-nav="deliveryPoint"><i class="bi bi-truck"></i> Delivery Points</a>
+                <a href="${request.contextPath}/location"            class="ds-nav-item" data-nav="location"><i class="bi bi-pin-map"></i> Locations</a>
+                <a href="${request.contextPath}/deliveryAssignment"  class="ds-nav-item" data-nav="deliveryAssignment"><i class="bi bi-list-check"></i> Assignments</a>
+            </g:if>
+
+        <%-- ── USER navigation ── --%>
+            <g:if test="${session.role == 'USER'}">
+                <a href="${request.contextPath}/my"            class="ds-nav-item" data-nav="userDashboard"><i class="bi bi-grid-1x2"></i> My Deliveries</a>
+                <a href="${request.contextPath}/warehouse"      class="ds-nav-item" data-nav="warehouse"><i class="bi bi-boxes"></i> Warehouses</a>
+                <a href="${request.contextPath}/deliveryPoint"  class="ds-nav-item" data-nav="deliveryPoint"><i class="bi bi-truck"></i> Delivery Points</a>
+                    <i class="bi bi-truck"></i> My Deliveries
+                </a>
+            </g:if>
+
         </div>
 
-
+        <%-- Global search — ADMIN only --%>
+        <g:if test="${session.role == 'ADMIN'}">
+            <div class="ds-nav-search-wrap">
+                <i class="bi bi-search ds-nav-search-icon"></i>
+                <input id="globalSearch" type="search" class="ds-nav-search" placeholder="Search locations…" autocomplete="off"/>
+                <div id="globalSearchResults"></div>
+            </div>
+        </g:if>
 
         <g:if test="${session.username}">
             <div class="ds-nav-user">
@@ -135,6 +141,7 @@
     var links  = document.getElementById('navLinks');
     if (toggle && links) toggle.addEventListener('click', function(){ links.classList.toggle('open'); });
 
+    /* ── Global search (admin only — element won't exist for users) ── */
     var searchInput = document.getElementById('globalSearch');
     var resultsBox  = document.getElementById('globalSearchResults');
     if (!searchInput) return;

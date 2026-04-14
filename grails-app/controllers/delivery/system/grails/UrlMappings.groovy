@@ -4,21 +4,19 @@ class UrlMappings {
 
     static mappings = {
 
-        "/login" (controller: 'auth') {
-            action = [GET: 'login', POST: 'doLogin']
-        }
-        "/logout" (controller: 'auth', action: 'logout')
+        "/login"     (controller: 'auth') { action = [GET: 'login', POST: 'doLogin'] }
+        "/logout"    (controller: 'auth', action: 'logout')
+        "/forbidden" (controller: 'auth', action: 'forbidden')
 
-        "/$controller/$action?/$id?(.$format)?" {
-            constraints {
-                // id must be a number if provided — prevents "mainForm" type bugs
-                // id matches: [0-9]+
-            }
+        "/my"              (controller: 'userDashboard', action: 'index')
+        "/my/update/$id"   (controller: 'userDashboard', action: 'updateStatus') {
+            constraints { id matches: /\d+/ }
         }
 
-        "/deliveryAssignment"(resources: "deliveryAssignment")
-        "/"(controller: "dashboard", action: "index")
-        "500"(view: '/error')
-        "404"(view: '/notFound')
+        "/deliveryAssignment" (resources: "deliveryAssignment")
+        "/" (controller: "dashboard", action: "index")
+        "500" (view: '/error')
+        "404" (view: '/notFound')
+        "/$controller/$action?/$id?(.$format)?" { constraints {} }
     }
 }

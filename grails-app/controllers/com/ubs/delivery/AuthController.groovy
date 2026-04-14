@@ -6,7 +6,12 @@ class AuthController {
     static allowedMethods = [doLogin: 'POST', logout: 'GET']
     def login() {
         if (session.userId) {
-            redirect controller: 'dashboard', action: 'index'
+            // Route to the right dashboard based on role
+            if (session.role == 'ADMIN') {
+                redirect controller: 'dashboard', action: 'index'
+            } else {
+                redirect controller: 'userDashboard', action: 'index'
+            }
             return
         }
         [error: flash.error]
@@ -22,21 +27,31 @@ class AuthController {
             session.username = user.username
             session.role     = user.role
             String returnUrl = session.returnUrl
-            session.returnUrl = null  // clear it
+            session.returnUrl = null
+
             flash.message = "Welcome back, ${user.username}!"
-            if (returnUrl) {
+
+            if (returnUrl && !returnUrl.contains('/dashboard/index') && !returnUrl.contains('/userDashboard')) {
                 redirect(url: returnUrl)
-            } else {
+            } else if (user.role == 'ADMIN') {
                 redirect controller: 'dashboard', action: 'index'
+            } else {
+                redirect controller: 'userDashboard', action: 'index'
             }
         } else {
             flash.error = 'Invalid username or password.'
             redirect action: 'login'
         }
     }
+
     def logout() {
-        session.invalidate()   // wipes ALL session data
+        session.invalidate()
         flash.message = 'You have been logged out.'
         redirect action: 'login'
+    }
+
+    /** Shown when a USER tries to access an admin-only page. */
+    def forbidden() {
+        response.status = 403
     }
 }

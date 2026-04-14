@@ -138,14 +138,18 @@
                 var typePill = loc.type === 'Warehouse'
                     ? '<span class="ds-pill ds-pill-priority-low">Warehouse</span>'
                     : '<span class="ds-pill ds-pill-status-pending">Delivery Point</span>';
+                var isAdmin = ${session.role == 'ADMIN' ? 'true' : 'false'};
                 var actions =
-                    '<a href="' + CTX + '/location/show/'    + loc.id + '" class="ds-link me-2">View</a>' +
-                    '<a href="' + CTX + '/location/edit/'    + loc.id + '" class="ds-link me-2">Edit</a>' +
-                    '<a href="' + CTX + '/location/insight/' + loc.id + '" class="ds-link me-2">Insight</a>' +
-                    '<form action="' + CTX + '/location/delete" method="POST" style="display:inline;">' +
-                    '  <input type="hidden" name="id" value="' + loc.id + '"/>' +
-                    '  <button type="submit" class="ds-btn-danger-inline" onclick="return confirm(\'Delete ' + loc.name.replace(/'/g,"\\'") + '?\')">Delete</button>' +
-                    '</form>';
+                    '<a href="' + CTX + '/location/show/' + loc.id + '" class="ds-link me-2">View</a>';
+                if (isAdmin) {
+                    actions +=
+                        '<a href="' + CTX + '/location/insight/' + loc.id + '" class="ds-link me-2">AI Insight</a>' +
+                        '<a href="' + CTX + '/location/edit/'    + loc.id + '" class="ds-link me-2">Edit</a>' +
+                        '<form action="' + CTX + '/location/delete" method="POST" style="display:inline;">' +
+                        '  <input type="hidden" name="id" value="' + loc.id + '"/>' +
+                        '  <button type="submit" class="ds-btn-danger-inline" onclick="return confirm(\'Delete ' + loc.name.replace(/'/g,"\\'") + '?\')">Delete</button>' +
+                        '</form>';
+                }
                 return '<tr>' +
                     '<td class="ds-td-strong">' + loc.name + '</td>' +
                     '<td><span class="ds-pill">' + loc.code + '</span></td>' +
