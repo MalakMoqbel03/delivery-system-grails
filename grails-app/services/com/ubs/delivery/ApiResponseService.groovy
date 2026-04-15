@@ -51,6 +51,15 @@ class ApiResponseService {
                 statusCode: 500
         )
     }
+    ApiResponse unauthorized(String msg) {
+        new ApiResponse(
+                success   : false,
+                message   : msg,
+                data      : null,
+                errors    : null,
+                statusCode: 401
+        )
+    }
 
     Map extractErrors(def grailsErrors) {
         Map result = [:]

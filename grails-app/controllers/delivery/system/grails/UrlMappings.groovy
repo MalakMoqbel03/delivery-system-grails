@@ -1,5 +1,4 @@
 package delivery.system.grails
-
 class UrlMappings {
 
     static mappings = {
@@ -15,6 +14,7 @@ class UrlMappings {
         }
         "/deliveryAssignment"(resources: "deliveryAssignment")
 
+        "/api/health"(controller: "apiHealth", action: "index", method: "GET")
         "/api/v1/locations"(controller: 'locationApiV1', namespace: 'api.v1') {
             action = [GET: 'index', POST: 'save']
         }

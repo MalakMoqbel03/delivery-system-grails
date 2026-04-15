@@ -75,7 +75,10 @@ class ApiWarehouseController {
                 renderApi(apiResponseService.notFound('Warehouse not found'))
                 return
             }
-            warehouse.properties = request.JSON
+
+
+            bindData(warehouse, request.JSON, [include: ['name', 'code', 'x', 'y', 'maxCapacity', 'currentLoad']])
+
             if (!warehouse.validate()) {
                 Map errors = apiResponseService.extractErrors(warehouse.errors)
                 renderApi(apiResponseService.badRequest(errors))

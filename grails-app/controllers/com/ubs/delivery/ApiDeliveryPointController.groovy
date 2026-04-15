@@ -75,7 +75,10 @@ class ApiDeliveryPointController {
                 renderApi(apiResponseService.notFound('Delivery point not found'))
                 return
             }
-            item.properties = request.JSON
+
+
+            bindData(item, request.JSON, [include: ['name', 'code', 'x', 'y', 'deliveryArea', 'priority']])
+
             if (!item.validate()) {
                 def errors = apiResponseService.extractErrors(item.errors)
                 renderApi(apiResponseService.badRequest(errors))
