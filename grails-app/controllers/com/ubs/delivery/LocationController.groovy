@@ -2,10 +2,11 @@ package com.ubs.delivery
 
 import grails.converters.JSON
 import grails.validation.ValidationException
-import static org.springframework.http.HttpStatus.*
+import grails.converters.JSON
 
 class LocationController {
     LocationService locationService
+    static responseFormats = ['json']
     static allowedMethods = [save: "POST", update: ["PUT","POST"], delete: ["DELETE","POST"]]
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
@@ -24,18 +25,15 @@ class LocationController {
         respond new Location(params)
     }
 
-    def save(Location location) {
-        if (location == null) { notFound(); return }
-        try {
-            locationService.save(location)
-        } catch (ValidationException e) {
-            respond location.errors, view: 'create'
+    def save() {
+        def location = new Location(request.JSON)
+
+        if (!location.save(flush: true)) {
+            render(status: 400, text: "Error")
             return
         }
-        flash.message = "Location '${location.name}' created."
-        redirect action: "index"
+        render(location as JSON)
     }
-
     def edit(Long id) {
         def loc = locationService.get(id)
         if (!loc) { notFound(); return }

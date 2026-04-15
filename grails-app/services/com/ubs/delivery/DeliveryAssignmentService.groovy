@@ -8,9 +8,9 @@ class DeliveryAssignmentService {
     List<DeliveryAssignment> list() {
         DeliveryAssignment.executeQuery(
                 """select a from DeliveryAssignment a
-               join fetch a.warehouse w
-               join fetch a.deliveryPoint dp
-               order by a.assignedAt desc"""
+                   join fetch a.warehouse w
+                   join fetch a.deliveryPoint dp
+                   order by a.assignedAt desc"""
         )
     }
 
@@ -19,39 +19,45 @@ class DeliveryAssignmentService {
     }
 
     DeliveryAssignment create(Long warehouseId, Long deliveryPointId, String status) {
-        def warehouse     = Warehouse.get(warehouseId)
+        def warehouse = Warehouse.get(warehouseId)
         def deliveryPoint = DeliveryPoint.get(deliveryPointId)
 
-        if (!warehouse || !deliveryPoint) {
-            throw new IllegalArgumentException("Warehouse or Delivery Point not found")
-        }
-
-        boolean alreadyExists = DeliveryAssignment.withCriteria {
-            eq('warehouse', warehouse)
-            eq('deliveryPoint', deliveryPoint)
-            maxResults(1)
-        }.size() > 0
-
-        if (alreadyExists) {
-            throw new IllegalStateException("Assignment already exists for this pair")
-        }
-
         def assignment = new DeliveryAssignment(
-                warehouse    : warehouse,
+                warehouse: warehouse,
                 deliveryPoint: deliveryPoint,
-                status       : status
+                status: status
         )
-
-        if (!assignment.save(flush: true)) {
-            throw new RuntimeException("Could not save assignment: ${assignment.errors}")
+        if (!warehouse) {
+            assignment.errors.rejectValue('warehouse', 'deliveryAssignment.warehouse.notFound', 'Warehouse not found')
         }
 
-        return assignment
-    }
+        if (!deliveryPoint) {
+            assignment.errors.rejectValue('deliveryPoint', 'deliveryAssignment.deliveryPoint.notFound', 'Delivery point not found')
+        }
+        if (warehouse && deliveryPoint) {
+            boolean alreadyExists = DeliveryAssignment.withCriteria {
+                eq('warehouse', warehouse)
+                eq('deliveryPoint', deliveryPoint)
+                maxResults(1)
+            }.size() > 0
 
+            if (alreadyExists) {
+                assignment.errors.reject('deliveryAssignment.duplicate', 'Assignment already exists for this warehouse and delivery point')
+            }
+        }
+
+        if (assignment.hasErrors() || !assignment.validate()) {
+            return assignment
+        }
+
+        assignment.save(flush: true, failOnError: true)
+        assignment
+    }
     void delete(Long id) {
         def assignment = DeliveryAssignment.get(id)
-        if (!assignment) throw new IllegalArgumentException("Assignment not found")
+        if (!assignment) {
+            throw new IllegalArgumentException('Assignment not found')
+        }
         assignment.delete(flush: true)
     }
 
