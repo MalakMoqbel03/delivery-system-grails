@@ -1,6 +1,5 @@
 package delivery.system.grails
 
-
 class UrlMappings {
 
     static mappings = {
@@ -16,10 +15,19 @@ class UrlMappings {
         }
         "/deliveryAssignment"(resources: "deliveryAssignment")
 
-        "/api/v1/locations"(controller: 'apiLocation') {
+        "/api/v1/locations"(controller: 'locationApiV1', namespace: 'api.v1') {
             action = [GET: 'index', POST: 'save']
         }
-        "/api/v1/locations/$id"(controller: 'apiLocation') {
+        "/api/v1/locations/$id"(controller: 'locationApiV1', namespace: 'api.v1') {
+            action = [GET: 'show', PUT: 'update', DELETE: 'delete']
+            constraints { id matches: /\d+/ }
+        }
+
+        // ── API V2 — Locations ──────────────────────────────────────────────
+        "/api/v2/locations"(controller: 'locationApiV2', namespace: 'api.v2') {
+            action = [GET: 'index', POST: 'save']
+        }
+        "/api/v2/locations/$id"(controller: 'locationApiV2', namespace: 'api.v2') {
             action = [GET: 'show', PUT: 'update', DELETE: 'delete']
             constraints { id matches: /\d+/ }
         }

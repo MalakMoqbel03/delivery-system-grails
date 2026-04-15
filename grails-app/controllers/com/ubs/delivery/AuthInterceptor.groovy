@@ -21,7 +21,9 @@ class AuthInterceptor {
     AuthInterceptor() {
         matchAll()
                 .excludes(controller: 'auth')
-                .excludes(uri: '/api/**')
+                .excludes(uri: '/api/v1/*')
+                .excludes(uri: '/api/v2/*')
+
     }
 
     boolean before() {
