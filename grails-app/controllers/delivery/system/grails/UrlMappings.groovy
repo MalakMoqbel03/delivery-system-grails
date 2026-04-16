@@ -31,6 +31,9 @@ class UrlMappings {
             action = [GET: 'show', PUT: 'update', DELETE: 'delete']
             constraints { id matches: /\d+/ }
         }
+        "/api/v2/admin/logs"(controller: 'apiAdminLog', namespace: 'api.v2') {
+            action = [GET: 'index']
+        }
 
         "/api/v1/deliveryPoints"(controller: 'apiDeliveryPoint') {
             action = [GET: 'index', POST: 'save']
@@ -55,6 +58,7 @@ class UrlMappings {
             action = [GET: 'show', DELETE: 'delete']
             constraints { id matches: /\d+/ }
         }
+
 
         "500"(controller: 'apiError', action: 'serverError')
         "404"(controller: 'apiError', action: 'notFound')

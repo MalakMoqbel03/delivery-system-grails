@@ -3,70 +3,59 @@ package com.ubs.delivery
 
 class AuthInterceptor {
 
-    private static final Set<String> ADMIN_WRITE_ACTIONS = [
-            'create', 'save', 'edit', 'update', 'delete'
-    ] as Set
-
-    private static final Set<String> ADMIN_ONLY_CONTROLLERS = [] as Set
-
-    private static final Map<String, Set<String>> ADMIN_CONTROLLER_ACTIONS = [
-            deliveryPoint      : ['create', 'save', 'edit', 'update', 'delete', 'highPriority', 'checkCode'] as Set,
-            deliveryAssignment : ['create', 'save', 'delete'] as Set,
-            dashboard          : ['index'] as Set,
-            warehouse          : ['create', 'save', 'edit', 'update', 'delete', 'checkCode'] as Set,
-            location           : ['create', 'save', 'edit', 'update', 'delete', 'highPriority',
-                                  'history', 'insight', 'sortedByDistance', 'warehousesWithSpace', 'index', 'show'] as Set
-    ]
-
     AuthInterceptor() {
         matchAll()
                 .excludes(controller: 'auth')
-
                 .excludes(uri: '/api/health')
                 .excludes(uri: '/api/v1/**')
                 .excludes(uri: '/api/v2/**')
     }
 
     boolean before() {
-        // ── 1. Authentication ────────────────────────────────────────────
+
+        // ── 1. Authentication (401) ───────────────────────────────────────
         if (!session.userId) {
             session.returnUrl = request.forwardURI
             redirect controller: 'auth', action: 'login'
             return false
         }
 
-        // ── 2. Authorisation ─────────────────────────────────────────────
-        String role = session.role ?: 'USER'
-        String ctrl = controllerName ?: ''
-        String act  = actionName     ?: 'index'
+        // ── 2. Authorisation (403) ────────────────────────────────────────
+        String role = session.role ?: 'ROLE_USER'
+        if (role == 'ROLE_ADMIN') return true
 
-        if (role != 'ADMIN') {
-            boolean blocked = false
+        String requestUri    = request.forwardURI ?: '/'
+        String requiredRole  = resolveRequiredRole(requestUri)
 
-            if (ADMIN_ONLY_CONTROLLERS.contains(ctrl)) {
-                blocked = true
-            }
-
-            if (!blocked && ADMIN_WRITE_ACTIONS.contains(act)) {
-                blocked = true
-            }
-
-            if (!blocked) {
-                Set<String> restrictedActions = ADMIN_CONTROLLER_ACTIONS[ctrl]
-                if (restrictedActions && restrictedActions.contains(act)) {
-                    blocked = true
-                }
-            }
-
-            if (blocked) {
-                redirect controller: 'auth', action: 'forbidden'
-                return false
-            }
+        if (requiredRole == 'ROLE_ADMIN') {
+            redirect controller: 'auth', action: 'forbidden'
+            return false
         }
 
         return true
     }
 
-    boolean after() { true }
+    boolean after()  { true }
     void afterView() {}
+
+    private String resolveRequiredRole(String uri) {
+        // Fetch rules ordered: longest/most-specific URLs first, '/**' last
+        List<RequestMap> rules = RequestMap.list(sort: 'url', order: 'desc')
+
+        for (RequestMap rule : rules) {
+            if (antMatch(rule.url, uri)) {
+                return rule.configAttribute
+            }
+        }
+        return 'ROLE_USER'
+    }
+
+    private static boolean antMatch(String pattern, String uri) {
+        if (pattern == '/**' || pattern == '**') return true
+        String regex = pattern
+                .replaceAll('\\*\\*', '__DS__')
+                .replaceAll('\\*',    '[^/]+')
+                .replaceAll('__DS__', '.*')
+        uri ==~ /^${regex}(\/.*)?$/
+    }
 }

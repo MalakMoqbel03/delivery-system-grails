@@ -18,4 +18,8 @@ class ApiResponse {
                 statusCode: statusCode
         ]
     }
+    @Override
+    String toString() {
+        "ApiResponse[statusCode=${statusCode}, success=${success}, message='${message}']"
+    }
 }

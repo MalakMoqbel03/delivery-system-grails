@@ -1,5 +1,7 @@
 package delivery.system.grails
 import com.ubs.delivery.ApiToken
+import com.ubs.delivery.RequestMap
+
 import java.util.UUID
 import com.ubs.delivery.DeliveryPoint
 import com.ubs.delivery.Warehouse
@@ -12,6 +14,52 @@ class BootStrap {
     def init = { servletContext ->
 
         def encoder = new BCryptPasswordEncoder(10)
+        if (RequestMap.count() == 0) {
+            [
+                    // ── Dashboard ────────────────────────────────
+                    [url: '/dashboard/**',                  role: 'ROLE_ADMIN'],
+
+                    // ── Location ─────────────────────────────────
+                    [url: '/location/create',               role: 'ROLE_ADMIN'],
+                    [url: '/location/save',                 role: 'ROLE_ADMIN'],
+                    [url: '/location/edit/**',              role: 'ROLE_ADMIN'],
+                    [url: '/location/update/**',            role: 'ROLE_ADMIN'],
+                    [url: '/location/delete/**',            role: 'ROLE_ADMIN'],
+                    [url: '/location/highPriority',         role: 'ROLE_ADMIN'],
+                    [url: '/location/history/**',           role: 'ROLE_ADMIN'],
+                    [url: '/location/insight/**',           role: 'ROLE_ADMIN'],
+                    [url: '/location/sortedByDistance',     role: 'ROLE_ADMIN'],
+                    [url: '/location/**',                   role: 'ROLE_ADMIN'],
+
+                    // ── DeliveryPoint ─────────────────────────────
+                    [url: '/deliveryPoint/create',          role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/save',            role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/edit/**',         role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/update/**',       role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/delete/**',       role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/highPriority',    role: 'ROLE_ADMIN'],
+                    [url: '/deliveryPoint/checkCode',       role: 'ROLE_ADMIN'],
+
+                    // ── Warehouse ─────────────────────────────────
+                    [url: '/warehouse/create',              role: 'ROLE_ADMIN'],
+                    [url: '/warehouse/save',                role: 'ROLE_ADMIN'],
+                    [url: '/warehouse/edit/**',             role: 'ROLE_ADMIN'],
+                    [url: '/warehouse/update/**',           role: 'ROLE_ADMIN'],
+                    [url: '/warehouse/delete/**',           role: 'ROLE_ADMIN'],
+                    [url: '/warehouse/checkCode',           role: 'ROLE_ADMIN'],
+
+                    // ── DeliveryAssignment ────────────────────────
+                    [url: '/deliveryAssignment/create',     role: 'ROLE_ADMIN'],
+                    [url: '/deliveryAssignment/save',       role: 'ROLE_ADMIN'],
+                    [url: '/deliveryAssignment/delete/**',  role: 'ROLE_ADMIN'],
+
+                    // ── Fallback — any authenticated user ─────────
+                    [url: '/**',                            role: 'ROLE_USER'],
+
+            ].each { rule ->
+                new RequestMap(url: rule.url, configAttribute: rule.role).save(failOnError: true)
+            }
+        }
 
         User.withTransaction {
             if (!User.findByUsername('admin')) {
