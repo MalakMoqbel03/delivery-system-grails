@@ -14,7 +14,9 @@ class UrlMappings {
         }
         "/deliveryAssignment"(resources: "deliveryAssignment")
 
+        // Health (no auth)
         "/api/health"(controller: "apiHealth", action: "index", method: "GET")
+        // ── API V1 — Locations ──────────────────────────────────────────────
         "/api/v1/locations"(controller: 'locationApiV1', namespace: 'api.v1') {
             action = [GET: 'index', POST: 'save']
         }
@@ -24,6 +26,10 @@ class UrlMappings {
         }
 
         // ── API V2 — Locations ──────────────────────────────────────────────
+        "/api/v2/locations/highPriority"(controller: 'locationApiV2', namespace: 'api.v2', action: 'highPriority', method: 'GET')
+        "/api/v2/locations/sortedByDistance"(controller: 'locationApiV2', namespace: 'api.v2', action: 'sortedByDistance', method: 'GET')
+        "/api/v2/locations/search"(controller: 'locationApiV2', namespace: 'api.v2', action: 'search', method: 'GET')
+        "/api/v2/locations/aiLog"(controller: 'locationApiV2', namespace: 'api.v2', action: 'aiLog', method: 'GET')
         "/api/v2/locations"(controller: 'locationApiV2', namespace: 'api.v2') {
             action = [GET: 'index', POST: 'save']
         }
@@ -31,10 +37,15 @@ class UrlMappings {
             action = [GET: 'show', PUT: 'update', DELETE: 'delete']
             constraints { id matches: /\d+/ }
         }
+        "/api/v2/locations/$id/insight"(controller: 'locationApiV2', namespace: 'api.v2', action: 'insight', method: 'GET') {
+            constraints { id matches: /\d+/ }
+        }
+        // ── API V2 — Admin logs ─────────────────────────────────────────────
         "/api/v2/admin/logs"(controller: 'apiAdminLog', namespace: 'api.v2') {
             action = [GET: 'index']
         }
 
+        // ── API V1 — Delivery Points ────────────────────────────────────────
         "/api/v1/deliveryPoints"(controller: 'apiDeliveryPoint') {
             action = [GET: 'index', POST: 'save']
         }
@@ -43,6 +54,7 @@ class UrlMappings {
             constraints { id matches: /\d+/ }
         }
 
+        // ── API V1 — Warehouses ─────────────────────────────────────────────
         "/api/v1/warehouses"(controller: 'apiWarehouse') {
             action = [GET: 'index', POST: 'save']
         }
@@ -51,6 +63,7 @@ class UrlMappings {
             constraints { id matches: /\d+/ }
         }
 
+        // ── API V1 — Delivery Assignments ───────────────────────────────────
         "/api/v1/deliveryAssignments"(controller: 'apiDeliveryAssignment') {
             action = [GET: 'index', POST: 'save']
         }
@@ -58,7 +71,6 @@ class UrlMappings {
             action = [GET: 'show', DELETE: 'delete']
             constraints { id matches: /\d+/ }
         }
-
 
         "500"(controller: 'apiError', action: 'serverError')
         "404"(controller: 'apiError', action: 'notFound')

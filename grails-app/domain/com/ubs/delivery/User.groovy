@@ -1,10 +1,9 @@
 package com.ubs.delivery
 
-
 class User {
-    String username
-    String password
-    String role
+    String  username
+    String  password
+    String  role
     boolean enabled = true
     static constraints = {
         username nullable: false, blank: false, unique: true, size: 3..50
@@ -13,6 +12,7 @@ class User {
     }
 
     static mapping = {
+        table    'delivery_user'
         password column: 'user_password'
     }
 }

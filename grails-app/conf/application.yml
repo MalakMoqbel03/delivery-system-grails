@@ -5,8 +5,6 @@ grails:
         defaultPackage: delivery.system.grails
     gorm:
         reactor:
-            # Whether to translate GORM events into Reactor events
-            # Disabled by default for performance reasons
             events: false
 info:
     app:
@@ -62,22 +60,22 @@ grails:
             csv: text/csv
             form: application/x-www-form-urlencoded
             html:
-              - text/html
-              - application/xhtml+xml
+                - text/html
+                - application/xhtml+xml
             js: text/javascript
             json:
-              - application/json
-              - text/json
+                - application/json
+                - text/json
             multipartForm: multipart/form-data
             pdf: application/pdf
             rss: application/rss+xml
             text: text/plain
             hal:
-              - application/hal+json
-              - application/hal+xml
+                - application/hal+json
+                - application/hal+xml
             xml:
-              - text/xml
-              - application/xml
+                - text/xml
+                - application/xml
     urlmapping:
         cache:
             maxsize: 1000
@@ -107,23 +105,23 @@ hibernate:
 dataSource:
     pooled: true
     jmxExport: true
-    driverClassName: com.mysql.cj.jdbc.Driver
-    dialect: org.hibernate.dialect.MySQL8Dialect
-    username: root
-    password: 'root1234'
+    driverClassName: org.postgresql.Driver
+    dialect: org.hibernate.dialect.PostgreSQLDialect
+    username: postgres
+    password: 'postgres'
 environments:
     development:
         dataSource:
             dbCreate: update
-            url: jdbc:mysql://localhost:3306/location_delivery_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+            url: jdbc:postgresql://localhost:5433/deliverydb
     test:
         dataSource:
             dbCreate: update
-            url: jdbc:mysql://localhost:3306/location_delivery_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+            url: jdbc:postgresql://localhost:5433/deliverydb
     production:
         dataSource:
             dbCreate: none
-            url: jdbc:mysql://localhost:3306/location_delivery_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+            url: jdbc:postgresql://localhost:5432/deliverydb
             properties:
                 jmxEnabled: true
                 initialSize: 5

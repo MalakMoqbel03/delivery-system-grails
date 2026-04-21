@@ -4,8 +4,8 @@ class Location {
 
     String name
     String code
-    Double x
-    Double y
+    byte[] x
+    byte[] y
 
     static constraints = {
         name nullable: false, blank: false
@@ -14,7 +14,10 @@ class Location {
         y    nullable: false
     }
     static mapping = {
-        table("Location")
+        table 'location'
+        tablePerSubclass true   // declared HERE on parent — never on subclasses
+        x sqlType: 'bytea'
+        y sqlType: 'bytea'
     }
 
     @Override

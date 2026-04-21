@@ -1,6 +1,5 @@
 package com.ubs.delivery
 
-
 class AIQueryLog {
 
     String locationCode
@@ -18,6 +17,7 @@ class AIQueryLog {
     }
 
     static mapping = {
-        sort queriedAt: 'desc'
+        table    'ai_query_log'
+        sort     queriedAt: 'desc'
     }
 }

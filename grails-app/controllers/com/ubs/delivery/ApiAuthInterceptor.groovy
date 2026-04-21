@@ -4,9 +4,9 @@ import grails.converters.JSON
 
 class ApiAuthInterceptor {
 
-    ApiResponseService  apiResponseService
-    RateLimiterService  rateLimiterService
-
+    ApiResponseService apiResponseService
+    RateLimiterService rateLimiterService
+    AuthService        authService
     ApiAuthInterceptor() {
         matchAll()
                 .matches(uri: '/api/**')
@@ -28,7 +28,7 @@ class ApiAuthInterceptor {
             return false
         }
 
-        ApiToken apiToken = ApiToken.findByTokenAndActive(tokenValue, true)
+        ApiToken apiToken = authService.findActiveToken(tokenValue)
 
         if (!apiToken) {
             renderJson(apiResponseService.unauthorized('Unauthorized'), 401)

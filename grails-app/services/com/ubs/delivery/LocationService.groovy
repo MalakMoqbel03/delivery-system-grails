@@ -5,47 +5,80 @@ import grails.gorm.transactions.Transactional
 @Transactional
 class LocationService {
 
+    EncryptionService encryptionService
     List<Location> list(params) {
         def max    = params?.max    ? params.int('max')    : 100
         def offset = params?.offset ? params.int('offset') : 0
         Location.executeQuery(
-                "select l from Location l order by l.name asc",
+                'select l from Location l order by l.name asc',
                 [:],
                 [max: max, offset: offset]
         )
     }
 
     int count() {
-        Location.executeQuery("select count(l) from Location l")[0] as int
+        Location.executeQuery('select count(l) from Location l')[0] as int
     }
 
     Location get(Long id) {
         Location.get(id)
     }
 
+    void delete(Long id) {
+        Location.get(id)?.delete(flush: true)
+    }
     Location save(Location location) {
         location.save(flush: true, failOnError: true)
     }
 
-    void delete(Long id) {
-        Location.get(id)?.delete(flush: true)
+
+    Location saveWithCoords(Location location, Double plainX, Double plainY) {
+        location.x = encryptionService.encryptCoordinate(plainX)
+        location.y = encryptionService.encryptCoordinate(plainY)
+        location.save(flush: true, failOnError: true)
+    }
+
+
+    Location updateCoords(Location location, Double plainX, Double plainY) {
+        location.x = encryptionService.encryptCoordinate(plainX)
+        location.y = encryptionService.encryptCoordinate(plainY)
+        location.save(flush: true, failOnError: true)
+    }
+
+    Map decryptToMap(Location loc) {
+        if (!loc) return null
+        Double dx = encryptionService.decryptCoordinate(loc.x)
+        Double dy = encryptionService.decryptCoordinate(loc.y)
+        [
+                id  : loc.id,
+                name: loc.name,
+                code: loc.code,
+                x   : dx,
+                y   : dy,
+                type: loc.class.simpleName
+        ]
     }
 
     List<Location> getAllSortedByDistance() {
-        Location.executeQuery("select l from Location l order by (l.x * l.x + l.y * l.y) asc"
-        )
+        List<Location> all = Location.executeQuery('select l from Location l')
+        all.sort { loc ->
+            Double dx = encryptionService.decryptCoordinate(loc.x) ?: 0.0
+            Double dy = encryptionService.decryptCoordinate(loc.y) ?: 0.0
+            Math.hypot(dx, dy)
+        }
+        return all
     }
 
     List<DeliveryPoint> getHighPriorityDeliveries() {
         DeliveryPoint.executeQuery(
-                "select dp from DeliveryPoint dp where dp.priority = :p order by dp.name asc",
+                'select dp from DeliveryPoint dp where dp.priority = :p order by dp.name asc',
                 [p: 'HIGH']
         )
     }
 
     List<Warehouse> getWarehousesWithSpace() {
         Warehouse.executeQuery(
-                "select w from Warehouse w where w.currentLoad < w.maxCapacity order by w.name asc"
+                'select w from Warehouse w where w.currentLoad < w.maxCapacity order by w.name asc'
         )
     }
 
@@ -64,28 +97,14 @@ class LocationService {
             order('name', 'asc')
             maxResults(50)
         }
-        results.collect { loc ->
-            def map = [
-                    id  : loc.id,
-                    name: loc.name,
-                    code: loc.code,
-                    x   : loc.x,
-                    y   : loc.y,
-                    type: loc.class.simpleName
-            ]
-            if (loc instanceof Warehouse) {
-                map.maxCapacity = loc.maxCapacity
-                map.currentLoad = loc.currentLoad
-            }
-            if (loc instanceof DeliveryPoint) {
-                map.deliveryArea = loc.deliveryArea
-                map.priority     = loc.priority
-            }
-            map
-        }
+        results.collect { loc -> decryptToMap(loc) }
     }
+
     String getAIInsight(Location location) {
         String result
+        Double dx = encryptionService.decryptCoordinate(location.x) ?: 0.0
+        Double dy = encryptionService.decryptCoordinate(location.y) ?: 0.0
+
         if (location instanceof DeliveryPoint) {
             DeliveryPoint dp = (DeliveryPoint) location
             String timeAdvice = dp.priority == 'HIGH'   ? 'Schedule immediately — this is urgent.'
@@ -96,7 +115,7 @@ class LocationService {
             Warehouse wh = (Warehouse) location
             result = "Warehouse ${wh.name} ${wh.hasSpace() ? 'has space available' : 'is FULL'} (${wh.currentLoad}/${wh.maxCapacity})."
         } else {
-            result = "General location ${location.name} at (${location.x}, ${location.y})."
+            result = "General location ${location.name} at (${dx}, ${dy})."
         }
 
         new AIQueryLog(
