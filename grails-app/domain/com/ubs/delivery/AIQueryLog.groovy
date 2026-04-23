@@ -3,22 +3,22 @@ package com.ubs.delivery
 class AIQueryLog {
 
     String locationCode
-    String locationName
+
     String queryType
     String aiResponse
-    Date   queriedAt = new Date()
+    Date   aggregatedAt
 
     static constraints = {
-        locationCode nullable: false
-        locationName nullable: false
-        queryType    nullable: false
-        aiResponse   nullable: false, maxSize: 2000
-        queriedAt    nullable: false
+        locationCode  nullable: false, blank: false, maxSize: 50
+        queryType     nullable: false, blank: false, maxSize: 50
+        aiResponse    nullable: false, maxSize: 200
+        aggregatedAt  nullable: false
     }
 
     static mapping = {
-        version  false
-        table    'ai_query_log'
-        sort     queriedAt: 'desc'
+        version      false
+        table        'ai_query_log'
+        aggregatedAt column: 'aggregated_at'
+        sort         aggregatedAt: 'desc'
     }
 }

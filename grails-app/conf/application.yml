@@ -12,18 +12,10 @@ info:
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
 
-# FIX 2 — Moved encryptionKey from info.app.encryptionKey to app.encryptionKey.
-#
-# EncryptionService uses @Value('${app.encryptionKey}') which resolves to the
-# top-level 'app:' key in Spring/Grails config. The original file had the key
-# nested under 'info.app.encryptionKey', so @Value could not find it and the
-# bean injection would fail with:
-#   IllegalArgumentException: Could not resolve placeholder 'app.encryptionKey'
-#
-# The key is now at the correct path. In production, set APP_ENCRYPTION_KEY
-# as an environment variable — the default value below is for development only.
+
 app:
     encryptionKey: ${APP_ENCRYPTION_KEY:a3f8c2d1e4b57a90f2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5}
+    hashingPepper: ${APP_HASHING_PEPPER:dev-pepper-change-this-in-production-use-64-random-chars}
 
 spring:
     jmx:

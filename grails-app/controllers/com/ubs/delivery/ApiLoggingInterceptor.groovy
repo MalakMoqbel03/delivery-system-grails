@@ -28,32 +28,31 @@ class ApiLoggingInterceptor {
         return true
     }
 
-
     boolean after() {
         try {
             Long startTime  = request.getAttribute('startTime') as Long
             long durationMs = startTime ? (System.currentTimeMillis() - startTime) : 0L
-
-
             String authHeader = request.getHeader('Authorization')
             String tokenValue = (authHeader?.startsWith('Bearer '))
                     ? authHeader.substring(7).trim()
                     : null
 
+            String rawIp = request.remoteAddr
+
             apiRequestLogService.save(
                     request.method,
                     request.forwardURI ?: request.requestURI,
                     tokenValue,
+                    rawIp,
                     response.status,
                     durationMs
             )
         } catch (Exception e) {
-            log.error("ApiLoggingInterceptor: failed to save request log", e)
+            log.error('ApiLoggingInterceptor: failed to save request log', e)
         }
 
         return true
     }
-
     void afterView() {
     }
 }

@@ -8,8 +8,8 @@ import grails.converters.JSON
 
 class ApiAdminLogController {
 
-    ApiResponseService    apiResponseService
-    ApiRequestLogService  apiRequestLogService
+    ApiResponseService   apiResponseService
+    ApiRequestLogService apiRequestLogService
 
     static namespace = 'api.v2'
 
@@ -30,19 +30,19 @@ class ApiAdminLogController {
                                 id            : entry.id,
                                 method        : entry.method,
                                 uri           : entry.uri,
-                                clientToken   : entry.clientToken,
+                                maskedIp      : entry.maskedIp,
                                 responseStatus: entry.responseStatus,
                                 durationMs    : entry.durationMs,
                                 requestedAt   : entry.requestedAt
                         ]
                     },
-                    total : logs.size()
+                    total: logs.size()
             ]
 
             renderApi(apiResponseService.ok(data))
         } catch (Exception e) {
-            log.error("Failed to fetch API request logs", e)
-            renderApi(apiResponseService.serverError("Failed to fetch API request logs"))
+            log.error('Failed to fetch API request logs', e)
+            renderApi(apiResponseService.serverError('Failed to fetch API request logs'))
         }
     }
 

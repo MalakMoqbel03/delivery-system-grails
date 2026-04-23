@@ -142,9 +142,11 @@ class BootStrap {
         }
 
         if (ApiToken.count() == 0) {
+
             def plain1 = UUID.randomUUID().toString()
             def plain2 = UUID.randomUUID().toString()
-
+            authService.saveToken('my-test-token-abc123', 'bruno-client')
+            println ">>> TEST TOKEN CREATED: my-test-token-abc123"
             authService.saveToken(plain1, 'Bruno Client 1')
             authService.saveToken(plain2, 'Bruno Client 2')
 
