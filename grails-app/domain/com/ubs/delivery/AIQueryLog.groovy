@@ -17,6 +17,7 @@ class AIQueryLog {
     }
 
     static mapping = {
+        version  false
         table    'ai_query_log'
         sort     queriedAt: 'desc'
     }

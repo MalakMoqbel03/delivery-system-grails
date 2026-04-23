@@ -12,6 +12,7 @@ class User {
     }
 
     static mapping = {
+        version  false
         table    'delivery_user'
         password column: 'user_password'
     }

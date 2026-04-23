@@ -10,6 +10,7 @@ class DeliveryPoint extends Location {
         priority     nullable: false, inList: ['LOW', 'MEDIUM', 'HIGH']
     }
     static mapping = {
-        table 'delivery_point'   // its own dedicated table
+        version  false
+        table 'delivery_point'
     }
 }

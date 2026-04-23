@@ -10,6 +10,7 @@ class Warehouse extends Location {
         currentLoad nullable: false, min: 0
     }
     static mapping = {
+        version  false
         table 'warehouse'
     }
 

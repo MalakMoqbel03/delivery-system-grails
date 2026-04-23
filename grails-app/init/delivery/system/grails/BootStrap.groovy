@@ -16,6 +16,7 @@ class BootStrap {
     AuthService    authService
     LocationService locationService
     def init = { servletContext ->
+        println "ENCRYPTION KEY: " + com.ubs.delivery.EncryptionService.generateKeyHex()
 
         def encoder = new BCryptPasswordEncoder(10)
         if (RequestMap.count() == 0) {
@@ -71,34 +72,76 @@ class BootStrap {
         if (Location.count() == 0) {
             Location.withTransaction {
                 def dp1 = new DeliveryPoint(name: 'Downtown Drop',      code: 'DP001', deliveryArea: 'City Centre',   priority: 'HIGH'  )
-                locationService.saveWithCoords(dp1, 3.5,  7.2)
+                locationService.saveWithCoords(dp1, 3.5,  7.2)           // 2-column
 
                 def dp2 = new DeliveryPoint(name: 'Suburb Stop',        code: 'DP002', deliveryArea: 'North Suburbs', priority: 'MEDIUM')
-                locationService.saveWithCoords(dp2, 10.0, 4.0)
+                locationService.saveWithCoords(dp2, 10.0, 4.0)           // 2-column
 
                 def dp3 = new DeliveryPoint(name: 'Airport Courier',    code: 'DP003', deliveryArea: 'Airport Zone',  priority: 'HIGH'  )
-                locationService.saveWithCoords(dp3, 15.5, 12.3)
+                locationService.saveWithCoords(dp3, 15.5, 12.3)          // 2-column
 
                 def dp4 = new DeliveryPoint(name: 'Market Lane',        code: 'DP004', deliveryArea: 'Old Market',    priority: 'LOW'   )
-                locationService.saveWithCoords(dp4, 2.1,  1.8)
+                locationService.saveWithCoords(dp4, 2.1,  1.8)           // 2-column
 
                 def dp5 = new DeliveryPoint(name: 'Tech Park Delivery', code: 'DP005', deliveryArea: 'Tech District', priority: 'MEDIUM')
-                locationService.saveWithCoords(dp5, 8.8,  9.9)
+                locationService.saveWithCoords(dp5, 8.8,  9.9)           // 2-column
 
                 def wh1 = new Warehouse(name: 'Central Hub',   code: 'WH001', maxCapacity: 500, currentLoad: 120)
-                locationService.saveWithCoords(wh1, 0.0,  0.0)
+                locationService.saveWithCoords(wh1, 0.0,  0.0)           // 2-column
 
                 def wh2 = new Warehouse(name: 'North Storage', code: 'WH002', maxCapacity: 300, currentLoad: 300)
-                locationService.saveWithCoords(wh2, 12.0, 18.0)
+                locationService.saveWithCoords(wh2, 12.0, 18.0)          // 2-column
 
                 def wh3 = new Warehouse(name: 'East Depot',    code: 'WH003', maxCapacity: 200, currentLoad: 80)
-                locationService.saveWithCoords(wh3, 20.0, 5.0)
+                locationService.saveWithCoords(wh3, 20.0, 5.0)           // 2-column
+
+                // ── 4-column benchmark rows (6 rows to match sample size of 2-column) ──
+                def dp6 = new DeliveryPoint(name: 'Benchmark Alpha',   code: 'DP006', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp6, 5.0, 5.0, 6.0, 6.0)
+
+                def dp7 = new DeliveryPoint(name: 'Benchmark Beta',    code: 'DP007', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp7, 7.0, 7.0, 8.0, 8.0)
+
+                def dp8 = new DeliveryPoint(name: 'Benchmark Gamma',   code: 'DP008', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp8, 9.0, 9.0, 10.0, 10.0)
+
+                def dp9 = new DeliveryPoint(name: 'Benchmark Delta',   code: 'DP009', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp9, 11.0, 11.0, 12.0, 12.0)
+
+                def dp10 = new DeliveryPoint(name: 'Benchmark Epsilon', code: 'DP010', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp10, 13.0, 13.0, 14.0, 14.0)
+
+                def dp11 = new DeliveryPoint(name: 'Benchmark Zeta',   code: 'DP011', deliveryArea: 'Benchmark Zone', priority: 'LOW')
+                locationService.saveWithFourEncryptedCoords(dp11, 15.0, 15.0, 16.0, 16.0)
 
                 println ">>> BootStrap: seeded ${Location.count()} locations (coordinates encrypted)"
+
+                // ── Print benchmark summary ────────────────────────────────
+                Map summary = locationService.encryptionBenchmarkService.getSummary()
+                println ""
+                println "========== ENCRYPTION BENCHMARK SUMMARY =========="
+                println "  (first call per column-count excluded as JVM warm-up)"
+                println ""
+                [2, 4].each { cols ->
+                    if (summary[cols]) {
+                        def s = summary[cols]
+                        println String.format(
+                                "  %d-col  steady: n=%-2d | avg=%6.4f ms | min=%6.4f ms | max=%6.4f ms  (warm-up was %.4f ms)",
+                                cols, s.count, s.avgMs, s.minMs, s.maxMs, s.warmupMs ?: 0.0
+                        )
+                    }
+                }
+                if (summary['comparison']) {
+                    println ""
+                    println "  4-col overhead vs 2-col: ${summary.comparison.overhead}"
+                    println "  Note: ${summary.comparison.note}"
+                }
+                println "==================================================="
+                println ""
             }
         }
 
-         if (ApiToken.count() == 0) {
+        if (ApiToken.count() == 0) {
             def plain1 = UUID.randomUUID().toString()
             def plain2 = UUID.randomUUID().toString()
 

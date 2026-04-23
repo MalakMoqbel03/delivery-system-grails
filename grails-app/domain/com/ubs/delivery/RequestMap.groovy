@@ -11,6 +11,7 @@ class RequestMap {
     }
 
     static mapping = {
+        version  false
         table 'request_map'
         cache true
     }

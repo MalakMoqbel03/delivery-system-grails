@@ -18,6 +18,7 @@ class DeliveryAssignment {
     }
 
     static mapping = {
+        version  false
         table 'delivery_assignment'
     }
     @Override

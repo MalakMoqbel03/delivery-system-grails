@@ -16,20 +16,18 @@ class ApiAuthInterceptor {
     boolean before() {
         String authHeader = request.getHeader('Authorization')
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!authHeader?.startsWith('Bearer ')) {
             renderJson(apiResponseService.unauthorized('Unauthorized'), 401)
             return false
         }
 
         String tokenValue = authHeader.substring(7).trim()
-
         if (!tokenValue) {
             renderJson(apiResponseService.unauthorized('Unauthorized'), 401)
             return false
         }
 
         ApiToken apiToken = authService.findActiveToken(tokenValue)
-
         if (!apiToken) {
             renderJson(apiResponseService.unauthorized('Unauthorized'), 401)
             return false

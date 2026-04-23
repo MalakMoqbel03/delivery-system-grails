@@ -15,7 +15,7 @@ class Location {
     }
     static mapping = {
         table 'location'
-        tablePerSubclass true   // declared HERE on parent — never on subclasses
+        tablePerSubclass true
         x sqlType: 'bytea'
         y sqlType: 'bytea'
     }

@@ -19,6 +19,7 @@ class ApiRequestLog {
     }
 
     static mapping = {
+        version  false
         sort requestedAt: 'desc'
     }
 }

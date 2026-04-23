@@ -15,6 +15,7 @@ class ApiToken {
     }
 
     static mapping = {
+        version  false
         table     'api_token'
         token     sqlType: 'bytea'
         sort      createdAt: 'desc'
