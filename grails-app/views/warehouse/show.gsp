@@ -29,7 +29,7 @@
                 <div class="ds-card-header">
                     <h2 class="ds-card-title mb-0">Details</h2>
                 </div>
-                <g:set var="pct" value="${warehouse ? (int)((warehouse.currentLoad / warehouse.maxCapacity) * 100) : 0}"/>
+                <g:set var="pct" value="${warehouse && warehouse.maxCapacity ? (int)((warehouse.currentLoad / warehouse.maxCapacity) * 100) : 0}"/>
                 <table class="ds-detail-table">
                     <tr><td class="ds-detail-label">Code</td><td class="ds-detail-value fw-bold">${warehouse?.code}</td></tr>
                     <tr><td class="ds-detail-label">Name</td><td class="ds-detail-value">${warehouse?.name}</td></tr>
@@ -58,7 +58,13 @@
                             </g:else>
                         </td>
                     </tr>
-                    <tr><td class="ds-detail-label">Coordinates</td><td class="ds-detail-value ds-muted">(${warehouse?.x}, ${warehouse?.y})</td></tr>
+                    <tr>
+                        <td class="ds-detail-label">Coordinates</td>
+                        <td class="ds-detail-value ds-muted">
+                            (${String.format('%.6f', plainX ?: 0.0)},
+                            ${String.format('%.6f', plainY ?: 0.0)})
+                        </td>
+                    </tr>
                 </table>
 
                 <div class="ds-card-footer mt-3 pt-3">

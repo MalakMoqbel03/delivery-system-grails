@@ -28,7 +28,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table ds-table align-middle mb-0">
+            <table class="table ds-table align-middle mb-0" id="historyTable">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -52,17 +52,26 @@
                         </td>
                     </tr>
                 </g:each>
-                <g:if test="${!logList}">
-                    <tr>
-                        <td colspan="6" class="ds-empty">
-                            No AI queries yet. Click "AI Insight" on any location to generate one.
-                        </td>
-                    </tr>
-                </g:if>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function(){
+    $('#historyTable').DataTable({
+        responsive: true,
+        pageLength: 20,
+        order: [[5, 'desc']], /* newest first */
+        language: {
+            search: '',
+            searchPlaceholder: 'Search history…',
+            info: 'Showing _START_–_END_ of _TOTAL_ queries',
+            emptyTable: 'No AI queries yet. Click "AI Insight" on any location to generate one.'
+        }
+    });
+});
+</script>
 </body>
 </html>

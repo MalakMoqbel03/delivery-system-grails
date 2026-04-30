@@ -22,9 +22,8 @@
             <h2 class="ds-card-title mb-0">Distance Ranking</h2>
             <div class="ds-card-subtitle">Nearest to farthest from headquarters</div>
         </div>
-
         <div class="table-responsive">
-            <table class="table ds-table align-middle mb-0">
+            <table class="table ds-table align-middle mb-0" id="distanceTable">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -32,13 +31,13 @@
                     <th>Name</th>
                     <th>Type</th>
                     <th>Coordinates</th>
-                    <th>Distance</th>
-                    <th class="text-end">Actions</th>
+                    <th>Distance (km)</th>
+                    <th class="text-end no-sort">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                <g:each in="${locationList}" var="loc" status="i">
-                    <g:set var="dist" value="${String.format('%.2f', Math.sqrt(loc.x * loc.x + loc.y * loc.y))}"/>
+                <g:each in="${locationList}" var="entry" status="i">
+                    <g:set var="loc" value="${entry.instance}"/>
                     <tr>
                         <td class="ds-muted" style="font-size:12px;">${i + 1}</td>
                         <td><span class="ds-pill">${loc.code}</span></td>
@@ -54,24 +53,41 @@
                                 <span class="ds-pill">General</span>
                             </g:else>
                         </td>
-                        <td class="ds-muted">(${loc.x}, ${loc.y})</td>
-                        <td class="fw-bold">${dist} km</td>
+                        <td class="ds-muted">
+                            (${String.format('%.4f', entry.plainX ?: 0.0)},
+                            ${String.format('%.4f', entry.plainY ?: 0.0)})
+                        </td>
+                        <td class="fw-bold">${String.format('%.2f', entry.distance ?: 0.0)}</td>
                         <td class="text-end">
                             <g:link controller="location" action="insight" id="${loc.id}" class="ds-link me-2">AI Insight</g:link>
-                            <g:link controller="location" action="show" id="${loc.id}" class="ds-link me-2">View</g:link>
-                            <g:link controller="location" action="edit" id="${loc.id}" class="ds-link">Edit</g:link>
+                            <g:link controller="location" action="show"    id="${loc.id}" class="ds-link me-2">View</g:link>
+                            <g:link controller="location" action="edit"    id="${loc.id}" class="ds-link">Edit</g:link>
                         </td>
                     </tr>
                 </g:each>
-                <g:if test="${!locationList}">
-                    <tr>
-                        <td colspan="7" class="ds-empty">No locations found.</td>
-                    </tr>
-                </g:if>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function(){
+        $('#distanceTable').DataTable({
+            responsive: true,
+            pageLength: 15,
+            order: [[5, 'asc']],
+            columnDefs: [
+                { orderable: false, targets: 'no-sort' },
+                { type: 'num', targets: [5] }
+            ],
+            language: {
+                search: '',
+                searchPlaceholder: 'Search…',
+                info: 'Showing _START_–_END_ of _TOTAL_ locations'
+            }
+        });
+    });
+</script>
 </body>
 </html>

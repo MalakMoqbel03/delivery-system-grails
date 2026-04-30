@@ -23,7 +23,6 @@
             <h2 class="ds-card-title mb-0">Available Warehouses</h2>
             <div class="ds-card-subtitle">Sorted by remaining capacity</div>
         </div>
-
         <div class="table-responsive">
             <table class="table ds-table align-middle mb-0">
                 <thead>
@@ -37,7 +36,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <g:each in="${warehouseList}" var="wh">
+                <g:each in="${warehouseList}" var="entry">
+                    <g:set var="wh"  value="${entry.instance}"/>
                     <g:set var="pct" value="${(int)((wh.currentLoad / wh.maxCapacity) * 100)}"/>
                     <tr>
                         <td><span class="ds-pill">${wh.code}</span></td>
@@ -54,7 +54,10 @@
                                      style="width:${pct}%;"></div>
                             </div>
                         </td>
-                        <td class="ds-muted">(${wh.x}, ${wh.y})</td>
+                        <td class="ds-muted">
+                            (${String.format('%.4f', entry.plainX ?: 0.0)},
+                            ${String.format('%.4f', entry.plainY ?: 0.0)})
+                        </td>
                         <td class="text-end">
                             <g:link controller="location" action="insight" id="${wh.id}" class="ds-link me-2">AI Insight</g:link>
                             <g:link controller="warehouse" action="show" id="${wh.id}" class="ds-link me-2">View</g:link>
@@ -63,9 +66,7 @@
                     </tr>
                 </g:each>
                 <g:if test="${!warehouseList}">
-                    <tr>
-                        <td colspan="6" class="ds-empty">No warehouses with available space found.</td>
-                    </tr>
+                    <tr><td colspan="6" class="ds-empty">No warehouses with available space found.</td></tr>
                 </g:if>
                 </tbody>
             </table>

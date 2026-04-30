@@ -6,9 +6,13 @@ class AuthInterceptor {
     AuthInterceptor() {
         matchAll()
                 .excludes(controller: 'auth')
-                .excludes(uri: '/api/health')
-                .excludes(uri: '/api/v1/**')
-                .excludes(uri: '/api/v2/**')
+                .excludes(uri: '/')
+                .excludes(uri: '/login')
+                .excludes(uri: '/logout')
+                .excludes(uri: '/error')
+                .excludes(uri: '/notFound')
+                .excludes(uri: '/assets/**')
+                .excludes(uri: '/api/**')   // already handled by ApiAuthInterceptor
     }
 
     boolean before() {
@@ -16,15 +20,22 @@ class AuthInterceptor {
         // ── 1. Authentication (401) ───────────────────────────────────────
         if (!session.userId) {
             session.returnUrl = request.forwardURI
-            redirect controller: 'auth', action: 'login'
+            redirect uri: '/login'
             return false
         }
 
         // ── 2. Authorisation (403) ────────────────────────────────────────
-        String role = session.role ?: 'ROLE_USER'
-        if (role == 'ROLE_ADMIN') return true
+        // session.role is stored as 'ADMIN' or 'USER' (without the ROLE_ prefix)
+        String role = session.role ?: 'USER'
+        if (role == 'ADMIN') return true
 
-        String requestUri    = request.forwardURI ?: '/'
+        // Allow authenticated users (any role) to access read-only list/search endpoints
+        // that are used to populate the warehouse and location index page tables.
+        String requestUri = request.forwardURI ?: '/'
+        if (requestUri ==~ '.*/location/(index|search|show/\\d+|warehousesWithSpace).*' ||
+                requestUri ==~ '.*/warehouse/(index|show/\\d+).*') {
+            return true
+        }
         String requiredRole  = resolveRequiredRole(requestUri)
 
         if (requiredRole == 'ROLE_ADMIN') {

@@ -11,12 +11,8 @@
         <div>
             <h1 class="ds-title">Delivery Assignments</h1>
             <p class="ds-subtitle mb-0">
-                <g:if test="${session.role == 'ADMIN'}">
-                    Manage warehouse-to-delivery-point assignments and track their status.
-                </g:if>
-                <g:else>
-                    Overview of all delivery assignments.
-                </g:else>
+                <g:if test="${session.role == 'ADMIN'}">Manage warehouse-to-delivery-point assignments and track their status.</g:if>
+                <g:else>Overview of all delivery assignments.</g:else>
             </p>
         </div>
         <div class="ds-header-actions">
@@ -33,7 +29,6 @@
     </div>
 
     <div class="row g-4">
-        <%-- Sidebar — admin only (users have their own nav in main.gsp) --%>
         <g:if test="${session.role == 'ADMIN'}">
             <aside class="col-12 col-lg-3">
                 <nav class="ds-sidebar" aria-label="Navigation">
@@ -76,76 +71,79 @@
                         <h2 class="ds-card-title mb-0">All Assignments</h2>
                         <div class="ds-card-subtitle">Track deliveries from warehouse to destination</div>
                     </div>
-                    <div class="ds-search-wrap">
-                        <input type="search" id="assignSearch" class="ds-search" placeholder="Search…"/>
-                    </div>
                 </div>
 
-                <g:if test="${assignmentList}">
-                    <div class="table-responsive">
-                        <table class="table ds-table align-middle mb-0" id="assignTable">
-                            <thead>
+                <div class="table-responsive">
+                    <table class="table ds-table align-middle mb-0" id="assignTable">
+                        <thead>
+                        <tr>
+                            <th>Warehouse</th>
+                            <th>Delivery Point</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Assigned At</th>
+                            <g:if test="${session.role == 'ADMIN'}">
+                                <th class="text-end no-sort">Actions</th>
+                            </g:if>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <g:each in="${assignmentList}" var="a">
                             <tr>
-                                <th>Warehouse</th>
-                                <th>Delivery Point</th>
-                                <th>Priority</th>
-                                <th>Status</th>
-                                <th>Assigned At</th>
-                                <%-- Delete column only for admins --%>
+                                <td class="ds-td-strong">
+                                    <g:link controller="warehouse" action="show" id="${a.warehouse.id}">${a.warehouse.name}</g:link>
+                                </td>
+                                <td class="ds-td-strong">
+                                    <g:link controller="deliveryPoint" action="show" id="${a.deliveryPoint.id}">${a.deliveryPoint.name}</g:link>
+                                </td>
+                                <td>
+                                    <span class="ds-pill ds-pill-priority-${a.deliveryPoint.priority.toLowerCase()}">${a.deliveryPoint.priority}</span>
+                                </td>
+                                <td>
+                                    <span class="ds-pill ds-pill-status-${a.status.toLowerCase()}">${a.status.replace('_',' ')}</span>
+                                </td>
+                                <td class="ds-muted">
+                                    <g:formatDate date="${a.assignedAt}" format="yyyy-MM-dd HH:mm"/>
+                                </td>
                                 <g:if test="${session.role == 'ADMIN'}">
-                                    <th class="text-end">Actions</th>
+                                    <td class="text-end">
+                                        <g:form controller="deliveryAssignment" action="delete" method="POST" style="display:inline;">
+                                            <g:hiddenField name="id" value="${a.id}"/>
+                                            <button type="submit" class="ds-btn-danger-inline"
+                                                    onclick="return confirm('Delete this assignment?')">Delete</button>
+                                        </g:form>
+                                    </td>
                                 </g:if>
                             </tr>
-                            </thead>
-                            <tbody>
-                            <g:each in="${assignmentList}" var="a">
-                                <tr class="ds-activity-row">
-                                    <td class="ds-td-strong">
-                                        <g:link controller="warehouse" action="show" id="${a.warehouse.id}">${a.warehouse.name}</g:link>
-                                    </td>
-                                    <td class="ds-td-strong">
-                                        <g:link controller="deliveryPoint" action="show" id="${a.deliveryPoint.id}">${a.deliveryPoint.name}</g:link>
-                                    </td>
-                                    <td>
-                                        <span class="ds-pill ds-pill-priority-${a.deliveryPoint.priority.toLowerCase()}">${a.deliveryPoint.priority}</span>
-                                    </td>
-                                    <td>
-                                        <span class="ds-pill ds-pill-status-${a.status.toLowerCase()}">${a.status.replace('_',' ')}</span>
-                                    </td>
-                                    <td class="ds-muted">
-                                        <g:formatDate date="${a.assignedAt}" format="yyyy-MM-dd HH:mm"/>
-                                    </td>
-                                    <g:if test="${session.role == 'ADMIN'}">
-                                        <td class="text-end">
-                                            <g:form controller="deliveryAssignment" action="delete" method="POST" style="display:inline;">
-                                                <g:hiddenField name="id" value="${a.id}"/>
-                                                <button type="submit" class="ds-btn-danger-inline"
-                                                        onclick="return confirm('Delete this assignment?')">Delete</button>
-                                            </g:form>
-                                        </td>
-                                    </g:if>
-                                </tr>
-                            </g:each>
-                            </tbody>
-                        </table>
-                    </div>
-                </g:if>
-                <g:else>
+                        </g:each>
+                        </tbody>
+                    </table>
+                </div>
+
+                <g:if test="${!assignmentList}">
                     <p class="ds-empty"><i class="bi bi-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>No assignments yet.</p>
-                </g:else>
+                </g:if>
             </div>
         </main>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-    var input = document.getElementById('assignSearch');
-    var rows  = document.querySelectorAll('#assignTable tbody tr');
-    if(!input) return;
-    input.addEventListener('input', function(){
-        var q = this.value.toLowerCase();
-        rows.forEach(function(r){ r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none'; });
+$(document).ready(function(){
+    $('#assignTable').DataTable({
+        responsive: true,
+        pageLength: 15,
+        order: [[4, 'desc']], /* sort by Assigned At descending */
+        columnDefs: [
+            { orderable: false, targets: 'no-sort' }
+        ],
+        language: {
+            search: '',
+            searchPlaceholder: 'Search assignments…',
+            lengthMenu: 'Show _MENU_ entries',
+            info: 'Showing _START_–_END_ of _TOTAL_ assignments',
+            emptyTable: 'No assignments yet. Create one from the button above.'
+        }
     });
 });
 </script>

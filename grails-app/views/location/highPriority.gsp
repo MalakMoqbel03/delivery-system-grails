@@ -18,6 +18,16 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="ds-card">
+                <div class="ds-card-title">High Priority Count</div>
+                <div class="ds-kpi-value mt-2">${highPriorityPoints?.size() ?: 0}</div>
+                <div class="ds-card-subtitle">Requiring immediate attention</div>
+            </div>
+        </div>
+    </div>
+
     <div class="ds-card">
         <div class="ds-card-header mb-2">
             <div>
@@ -26,41 +36,54 @@
             </div>
         </div>
 
-        <g:if test="${highPriorityPoints && highPriorityPoints.size() > 0}">
-            <div class="table-responsive">
-                <table class="table ds-table align-middle mb-0">
-                    <thead>
+        <div class="table-responsive">
+            <table class="table ds-table align-middle mb-0" id="highPriorityTable">
+                <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Delivery Area</th>
+                    <th>Priority</th>
+                    <th class="text-end no-sort">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <g:each in="${highPriorityPoints}" var="point">
                     <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Delivery Area</th>
-                        <th>Coordinates</th>
-                        <th>Priority</th>
-                        <th class="text-end">Actions</th>
+                        <td><span class="ds-pill">${point.code}</span></td>
+                        <td class="ds-td-strong">${point.name}</td>
+                        <td class="ds-muted">${point.deliveryArea}</td>
+                        <td><span class="ds-pill ds-pill-priority-high">${point.priority}</span></td>
+                        <td class="text-end">
+                            <g:link controller="location" action="show" id="${point.id}" class="ds-link me-2">View</g:link>
+                            <g:link controller="location" action="insight" id="${point.id}" class="ds-link">AI Insight</g:link>
+                        </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    <g:each in="${highPriorityPoints}" var="point">
-                        <tr>
-                            <td><span class="ds-pill">${point.code}</span></td>
-                            <td class="ds-td-strong">${point.name}</td>
-                            <td class="ds-muted">${point.deliveryArea}</td>
-                            <td class="ds-muted">(${point.x}, ${point.y})</td>
-                            <td><span class="ds-pill ds-pill-priority-high">${point.priority}</span></td>
-                            <td class="text-end">
-                                <g:link controller="location" action="show" id="${point.id}" class="ds-link me-2">View</g:link>
-                                <g:link controller="location" action="insight" id="${point.id}" class="ds-link">AI Insight</g:link>
-                            </td>
-                        </tr>
-                    </g:each>
-                    </tbody>
-                </table>
-            </div>
-        </g:if>
-        <g:else>
-            <p class="ds-empty">No high priority delivery points found.</p>
-        </g:else>
+                </g:each>
+                <g:if test="${!highPriorityPoints || highPriorityPoints.isEmpty()}">
+                    <tr><td colspan="5" class="ds-empty">No high priority delivery points found.</td></tr>
+                </g:if>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function(){
+    $('#highPriorityTable').DataTable({
+        responsive: true,
+        pageLength: 15,
+        order: [[1, 'asc']],
+        columnDefs: [{ orderable: false, targets: 'no-sort' }],
+        language: {
+            search: '',
+            searchPlaceholder: 'Search high priority…',
+            info: 'Showing _START_–_END_ of _TOTAL_ locations',
+            emptyTable: 'No high priority delivery points found.'
+        }
+    });
+});
+</script>
 </body>
 </html>

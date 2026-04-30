@@ -52,13 +52,13 @@
                         <div class="col-6">
                             <div class="ds-form-row">
                                 <label class="ds-form-label">X Coordinate *</label>
-                                <g:field type="number" step="0.1" name="x" value="${this.warehouse?.x}" class="ds-input"/>
+                                <g:field type="number" step="0.1" name="x" value="${plainX ?: ''}" class="ds-input"/>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="ds-form-row">
                                 <label class="ds-form-label">Y Coordinate *</label>
-                                <g:field type="number" step="0.1" name="y" value="${this.warehouse?.y}" class="ds-input"/>
+                                <g:field type="number" step="0.1" name="y" value="${plainY ?: ''}" class="ds-input"/>
                             </div>
                         </div>
                     </div>

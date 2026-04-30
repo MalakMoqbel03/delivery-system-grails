@@ -66,8 +66,7 @@
                     <div class="ds-form-row">
                         <label class="ds-form-label">Code * <span style="font-weight:600;color:rgba(0,0,0,0.38);">(unique)</span></label>
                         <div class="code-wrap">
-                            <span class="code-prefix">DP_</span>
-                            <input type="number" id="codeNum" class="code-num" placeholder="001" min="1" max="9999"
+                            <span class="code-prefix">DP</span>                            <input type="number" id="codeNum" class="code-num" placeholder="001" min="1" max="9999"
                                    value="${this.deliveryPoint?.code ? this.deliveryPoint.code.replace('DP_','') : ''}"/>
                         </div>
                         <input type="hidden" name="code" id="codeHidden" value="${this.deliveryPoint?.code ?: ''}"/>
@@ -152,7 +151,7 @@
         suggestions.innerHTML='';
         var nums=[...new Set([String(Math.floor(Math.random()*900)+100),String(Math.floor(Math.random()*900)+100),String(Math.floor(Math.random()*900)+100)])];
         nums.forEach(function(num){
-            var full='DP_'+num;
+            var full='DP'+num;
             var btn=document.createElement('button');btn.type='button';btn.className='code-suggest-btn';btn.textContent=full;
             if(takenCodes.has(full))btn.classList.add('taken');
             btn.addEventListener('click',function(){if(btn.classList.contains('taken'))return;codeNum.value=num;checkCode();});

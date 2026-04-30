@@ -29,11 +29,17 @@
                 <div class="ds-card-header mb-2">
                     <h2 class="ds-card-title mb-0">Details</h2>
                 </div>
+                <g:set var="distKm" value="${plainX != null && plainY != null ? Math.hypot(plainX, plainY) : 0.0}"/>
                 <table class="ds-detail-table w-100">
                     <tr><td class="ds-detail-label">Name</td><td class="ds-detail-value fw-bold">${location?.name}</td></tr>
                     <tr><td class="ds-detail-label">Code</td><td class="ds-detail-value">${location?.code}</td></tr>
-                    <tr><td class="ds-detail-label">X Coordinate</td><td class="ds-detail-value ds-muted">${location?.x}</td></tr>
-                    <tr><td class="ds-detail-label">Y Coordinate</td><td class="ds-detail-value ds-muted">${location?.y}</td></tr>
+                    <tr>
+                        <td class="ds-detail-label">Coordinates</td>
+                        <td class="ds-detail-value ds-muted">
+                            (${String.format('%.6f', plainX ?: 0.0)},
+                            ${String.format('%.6f', plainY ?: 0.0)})
+                        </td>
+                    </tr>
                     <tr>
                         <td class="ds-detail-label">Type</td>
                         <td class="ds-detail-value">
@@ -49,18 +55,34 @@
                         </td>
                     </tr>
                     <g:if test="${location instanceof com.ubs.delivery.Warehouse}">
-                        <tr><td class="ds-detail-label">Max Capacity</td><td class="ds-detail-value">${((com.ubs.delivery.Warehouse)location).maxCapacity}</td></tr>
-                        <tr><td class="ds-detail-label">Current Load</td><td class="ds-detail-value">${((com.ubs.delivery.Warehouse)location).currentLoad}</td></tr>
+                        <g:set var="wh" value="${(com.ubs.delivery.Warehouse) location}"/>
+                        <tr><td class="ds-detail-label">Max Capacity</td><td class="ds-detail-value">${wh.maxCapacity} units</td></tr>
+                        <tr><td class="ds-detail-label">Current Load</td><td class="ds-detail-value">${wh.currentLoad} units</td></tr>
+                        <tr>
+                            <td class="ds-detail-label">Status</td>
+                            <td class="ds-detail-value">
+                                <g:if test="${wh.hasSpace()}">
+                                    <span class="ds-pill ds-pill-priority-low">Has space available</span>
+                                </g:if>
+                                <g:else>
+                                    <span class="ds-pill ds-pill-priority-high">FULL</span>
+                                </g:else>
+                            </td>
+                        </tr>
                     </g:if>
                     <g:if test="${location instanceof com.ubs.delivery.DeliveryPoint}">
-                        <tr><td class="ds-detail-label">Delivery Area</td><td class="ds-detail-value">${((com.ubs.delivery.DeliveryPoint)location).deliveryArea}</td></tr>
-                        <tr><td class="ds-detail-label">Priority</td><td class="ds-detail-value">
-                            <span class="ds-pill ds-pill-priority-${((com.ubs.delivery.DeliveryPoint)location).priority?.toLowerCase()}">${((com.ubs.delivery.DeliveryPoint)location).priority}</span>
-                        </td></tr>
+                        <g:set var="dp" value="${(com.ubs.delivery.DeliveryPoint) location}"/>
+                        <tr><td class="ds-detail-label">Delivery Area</td><td class="ds-detail-value">${dp.deliveryArea}</td></tr>
+                        <tr>
+                            <td class="ds-detail-label">Priority</td>
+                            <td class="ds-detail-value">
+                                <span class="ds-pill ds-pill-priority-${dp.priority?.toLowerCase()}">${dp.priority}</span>
+                            </td>
+                        </tr>
                     </g:if>
                     <tr>
                         <td class="ds-detail-label">Distance from HQ</td>
-                        <td class="ds-detail-value fw-bold">${location?.x != null && location?.y != null ? String.format('%.2f', Math.sqrt(location.x * location.x + location.y * location.y)) : 'N/A'} km</td>
+                        <td class="ds-detail-value fw-bold">${String.format('%.2f', distKm)} km</td>
                     </tr>
                 </table>
                 <div class="ds-card-footer mt-3 pt-3">

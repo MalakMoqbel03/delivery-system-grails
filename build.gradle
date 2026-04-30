@@ -10,6 +10,7 @@ buildscript {
         classpath "org.apache.grails:grails-gradle-plugins"
         classpath "org.apache.grails:grails-data-hibernate5"
         classpath "cloud.wondrify:asset-pipeline-gradle"
+        classpath "io.spring.gradle:dependency-management-plugin:1.1.4"  // ← ADD THIS
     }
 }
 
@@ -22,6 +23,7 @@ apply plugin:"war"
 apply plugin:"org.apache.grails.gradle.grails-web"
 apply plugin:"cloud.wondrify.asset-pipeline"
 apply plugin:"org.apache.grails.gradle.grails-gsp"
+apply plugin:"io.spring.dependency-management"  // ← ADD THIS
 
 repositories {
     mavenCentral()
@@ -30,9 +32,16 @@ repositories {
     }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0"
+    }
+}
+
 dependencies {
     console "org.apache.grails:grails-console"
     developmentOnly "org.springframework.boot:spring-boot-devtools"
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
     implementation platform("org.apache.grails:grails-bom:$grailsVersion")
     implementation "org.springframework.boot:spring-boot-starter-logging"
     implementation "org.springframework.boot:spring-boot-starter-validation"
@@ -53,6 +62,8 @@ dependencies {
     implementation "org.apache.grails:grails-data-hibernate5"
     implementation "org.apache.grails:grails-gsp"
     implementation 'org.springframework.security:spring-security-crypto'
+    implementation 'org.springframework.cloud:spring-cloud-starter-vault-config'
+    implementation "org.springframework.vault:spring-vault-core"
     integrationTestImplementation testFixtures("org.apache.grails:grails-geb")
     profile "org.apache.grails.profiles:web"
     runtimeOnly "org.fusesource.jansi:jansi"
@@ -73,11 +84,9 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
-// https://github.com/apache/grails-core/issues/15321
 tasks.withType(GroovyCompile).configureEach {
     groovyOptions.optimizationOptions.indy = false
 }
-
 
 assets {
     excludes = [
@@ -93,4 +102,3 @@ assets {
             'webjars/bootstrap-icons/*/font/fonts/*',
     ]
 }
-

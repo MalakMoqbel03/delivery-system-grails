@@ -30,14 +30,14 @@ class LocationService {
         Location.get(id)?.delete(flush: true)
     }
 
-
     Location saveWithCoords(Location location, Double plainX, Double plainY) {
-
         encryptionBenchmarkService.timeEncryption(2) {
             location.x = encryptionService.encryptCoordinate(plainX)
             location.y = encryptionService.encryptCoordinate(plainY)
         }
+        long insertStart = System.nanoTime()
         location.save(flush: true, failOnError: true)
+        encryptionBenchmarkService.recordInsert(2, System.nanoTime() - insertStart)
         return location
     }
 
@@ -52,10 +52,11 @@ class LocationService {
             encX2      = encryptionService.encryptCoordinate(plainX2)
             encY2      = encryptionService.encryptCoordinate(plainY2)
         }
+        long insertStart = System.nanoTime()
         location.save(flush: true, failOnError: true)
+        encryptionBenchmarkService.recordInsert(4, System.nanoTime() - insertStart)
         return location
     }
-
 
     Location updateCoords(Location location, Double plainX, Double plainY) {
         location.x = encryptionService.encryptCoordinate(plainX)
@@ -64,17 +65,21 @@ class LocationService {
         return location
     }
 
-
     Location save(Location location) {
         location.save(flush: true, failOnError: true)
         return location
     }
 
+    /**
+     * Decrypts coordinates and returns a flat map safe to serialise as JSON.
+     * Includes warehouse-specific fields (maxCapacity, currentLoad) when the
+     * location is a Warehouse so the warehouse index table can render the
+     * capacity bar correctly.
+     */
     Map decryptToMap(Location loc) {
         if (!loc) return null
-        // decryptCoords() now exists in EncryptionService (FIX 1)
         Map coords = encryptionService.decryptCoords(loc)
-        [
+        Map result = [
                 id  : loc.id,
                 name: loc.name,
                 code: loc.code,
@@ -82,6 +87,17 @@ class LocationService {
                 y   : coords.y,
                 type: loc.class.simpleName
         ]
+        // Add warehouse-specific fields so the JS capacity bar has real data
+        if (loc instanceof Warehouse) {
+            result.maxCapacity  = loc.maxCapacity
+            result.currentLoad  = loc.currentLoad
+        }
+        // Add delivery-point-specific fields for completeness
+        if (loc instanceof DeliveryPoint) {
+            result.deliveryArea = loc.deliveryArea
+            result.priority     = loc.priority
+        }
+        return result
     }
 
     List<Location> getAllSortedByDistance() {
@@ -107,19 +123,20 @@ class LocationService {
     }
 
     List<Map> search(String q) {
-        def results = Location.withCriteria {
-            or {
-                eq('class', Warehouse)
-                eq('class', DeliveryPoint)
-            }
-            if (q && q.trim()) {
-                or {
-                    ilike('name', "%${q.trim()}%")
-                    ilike('code', "%${q.trim()}%")
-                }
-            }
-            order('name', 'asc')
-            maxResults(50)
+        String trimmed = q?.trim() ?: ''
+        List<Location> results
+        if (trimmed) {
+            results = Location.executeQuery(
+                    "select l from Location l where (lower(l.name) like :q or lower(l.code) like :q) order by l.name asc",
+                    [q: "%${trimmed.toLowerCase()}%"],
+                    [max: 50]
+            )
+        } else {
+            results = Location.executeQuery(
+                    "select l from Location l order by l.name asc",
+                    [:],
+                    [max: 50]
+            )
         }
         results.collect { loc -> decryptToMap(loc) }
     }
@@ -148,10 +165,9 @@ class LocationService {
                 aiResponse   : result,
                 aggregatedAt : truncateToHour(new Date())
         ).save(flush: true, failOnError: true)
-
         return result
     }
-    
+
     private static Date truncateToHour(Date d) {
         Calendar cal = Calendar.getInstance()
         cal.setTime(d)

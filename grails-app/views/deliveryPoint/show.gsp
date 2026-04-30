@@ -29,6 +29,7 @@
                 <div class="ds-card-header mb-2">
                     <h2 class="ds-card-title mb-0">Details</h2>
                 </div>
+                <g:set var="distKm" value="${plainX != null && plainY != null ? Math.sqrt(plainX * plainX + plainY * plainY) : 0.0}"/>
                 <table class="ds-detail-table">
                     <tr><td class="ds-detail-label">Code</td><td class="ds-detail-value fw-bold">${deliveryPoint?.code}</td></tr>
                     <tr><td class="ds-detail-label">Name</td><td class="ds-detail-value">${deliveryPoint?.name}</td></tr>
@@ -39,12 +40,17 @@
                             <span class="ds-pill ds-pill-priority-${deliveryPoint?.priority?.toLowerCase()}">${deliveryPoint?.priority}</span>
                         </td>
                     </tr>
-                    <tr><td class="ds-detail-label">Coordinates</td><td class="ds-detail-value ds-muted">(${deliveryPoint?.x}, ${deliveryPoint?.y})</td></tr>
+                    <tr>
+                        <td class="ds-detail-label">Coordinates</td>
+                        <td class="ds-detail-value ds-muted">
+                            (${String.format('%.6f', plainX ?: 0.0)},
+                            ${String.format('%.6f', plainY ?: 0.0)})
+                        </td>
+                    </tr>
                     <tr>
                         <td class="ds-detail-label">Distance from HQ</td>
-                        <td class="ds-detail-value fw-bold">${String.format('%.2f', Math.sqrt(deliveryPoint?.x * deliveryPoint?.x + deliveryPoint?.y * deliveryPoint?.y))} km</td>
+                        <td class="ds-detail-value fw-bold">${String.format('%.2f', distKm)} km</td>
                     </tr>
-                    <%-- Step 7 equivalent: average assignment status weight displayed on the show page --%>
                     <tr>
                         <td class="ds-detail-label">Avg. Status Score</td>
                         <td class="ds-detail-value fw-bold">

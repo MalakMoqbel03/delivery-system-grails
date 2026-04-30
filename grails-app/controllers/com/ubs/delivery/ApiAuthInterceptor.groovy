@@ -8,9 +8,7 @@ class ApiAuthInterceptor {
     RateLimiterService rateLimiterService
     AuthService        authService
     ApiAuthInterceptor() {
-        matchAll()
-                .matches(uri: '/api/**')
-                .excludes(uri: '/api/health')
+        match(uri: '/api/**')  // use match() not matchAll().matches()
     }
 
     boolean before() {

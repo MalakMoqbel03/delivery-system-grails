@@ -7,79 +7,113 @@ import static org.springframework.http.HttpStatus.*
 
 class WarehouseController {
 
-    WarehouseService warehouseService
+    WarehouseService  warehouseService
+    LocationService   locationService
+    EncryptionService encryptionService
 
     static allowedMethods = [save: "POST", update: ["PUT","POST"], delete: ["DELETE","POST"]]
 
-    def index(Integer max) {
-        params.max = Math.min(max ?: 10, 100)
-        respond warehouseService.list(params), model:[warehouseCount: warehouseService.count()]
+    def index() {
+        List<Warehouse> warehouses = Warehouse.list(sort: "name", order: "asc")
+
+        def warehouseRows = warehouses.collect { wh ->
+            [
+                    id          : wh.id,
+                    name        : wh.name,
+                    code        : wh.code,
+                    x : encryptionService.decryptCoordinate(wh.x),
+                    y : encryptionService.decryptCoordinate(wh.y),
+                    currentLoad : wh.currentLoad ?: 0,
+                    maxCapacity : wh.maxCapacity ?: 0
+            ]
+        }
+
+        [
+                warehouseList : warehouseRows,
+                warehouseCount: warehouseRows.size()
+        ]
     }
 
-    def show(Long id) { respond warehouseService.get(id) }
-    def create() { respond new Warehouse(params) }
+    def show(Long id) {
+        def warehouse = warehouseService.get(id)
+        if (!warehouse) { notFound(); return }
+        Map coords = encryptionService.decryptCoords(warehouse)
+        render view: 'show', model: [warehouse: warehouse, plainX: coords.x, plainY: coords.y]
+    }
+
+    def create() {
+        render view: 'create', model: [warehouse: new Warehouse(params)]
+    }
 
     @Transactional(readOnly = true)
     def checkCode(String code) {
-        def available = !Warehouse.findByCode(code)
+        def available = !Location.findByCode(code?.trim()?.toUpperCase())
         render([available: available] as JSON)
     }
 
-    def save(Warehouse warehouse) {
-        if (warehouse == null) { notFound(); return }
-        try {
-            warehouseService.save(warehouse)
-        } catch (ValidationException e) {
-            respond warehouse.errors, view:'create'
+    def save() {
+        Double plainX = params.double('x')
+        Double plainY = params.double('y')
+        if (plainX == null || plainY == null) {
+            flash.message = 'X and Y coordinates are required.'
+            render view: 'create', model: [warehouse: new Warehouse(params)]
             return
         }
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.created.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
-                redirect warehouse
-            }
-            '*' { respond warehouse, [status: CREATED] }
+        def warehouse = new Warehouse(
+                name:        params.name,
+                code:        params.code,
+                maxCapacity: params.int('maxCapacity'),
+                currentLoad: params.int('currentLoad') ?: 0
+        )
+        try {
+            locationService.saveWithCoords(warehouse, plainX, plainY)
+        } catch (ValidationException e) {
+            render view: 'create', model: [warehouse: warehouse]
+            return
         }
+        flash.message = message(code: 'default.created.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
+        redirect action: 'show', id: warehouse.id
     }
 
-    def edit(Long id) { respond warehouseService.get(id) }
+    def edit(Long id) {
+        def warehouse = warehouseService.get(id)
+        if (!warehouse) { notFound(); return }
+        Map coords = encryptionService.decryptCoords(warehouse)
+        render view: 'edit', model: [warehouse: warehouse, plainX: coords.x, plainY: coords.y]
+    }
 
-    def update(Warehouse warehouse) {
+    def update(Long id) {
+        def warehouse = warehouseService.get(id)
         if (warehouse == null) { notFound(); return }
+        warehouse.name        = params.name
+        warehouse.code        = params.code
+        warehouse.maxCapacity = params.int('maxCapacity')
+        warehouse.currentLoad = params.int('currentLoad') ?: 0
+        Double plainX = params.double('x')
+        Double plainY = params.double('y')
         try {
-            warehouseService.save(warehouse)
+            if (plainX != null && plainY != null) {
+                locationService.updateCoords(warehouse, plainX, plainY)
+            } else {
+                warehouseService.save(warehouse)
+            }
         } catch (ValidationException e) {
-            respond warehouse.errors, view:'edit'
+            render view: 'edit', model: [warehouse: warehouse]
             return
         }
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.updated.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
-                redirect warehouse
-            }
-            '*'{ respond warehouse, [status: OK] }
-        }
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), warehouse.id])
+        redirect action: 'show', id: warehouse.id
     }
 
     def delete(Long id) {
         if (id == null) { notFound(); return }
         warehouseService.delete(id)
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.deleted.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), id])
-                redirect action:"index", method:"GET"
-            }
-            '*'{ render status: NO_CONTENT }
-        }
+        flash.message = message(code: 'default.deleted.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), id])
+        redirect action: 'index', method: 'GET'
     }
 
     protected void notFound() {
-        request.withFormat {
-            form multipartForm {
-                flash.message = message(code: 'default.not.found.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), params.id])
-                redirect action: "index", method: "GET"
-            }
-            '*'{ render status: NOT_FOUND }
-        }
+        flash.message = message(code: 'default.not.found.message', args: [message(code: 'warehouse.label', default: 'Warehouse'), params.id])
+        redirect action: 'index', method: 'GET'
     }
 }

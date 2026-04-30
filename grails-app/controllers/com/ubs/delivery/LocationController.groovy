@@ -4,26 +4,42 @@ import grails.converters.JSON
 import grails.validation.ValidationException
 
 class LocationController {
-    LocationService    locationService
-    EncryptionService  encryptionService
-    static responseFormats = ['json']
-    static allowedMethods  = [save: 'POST', update: ['PUT', 'POST'], delete: ['DELETE', 'POST']]
+    LocationService   locationService
+    EncryptionService encryptionService
 
-    def index(Integer max) {
-        params.max = Math.min(max ?: 10, 100)
-        def locationList  = locationService.list(params)
-        def locationCount = locationService.count()
-        [locationList: locationList, locationCount: locationCount]
+    static allowedMethods = [save: 'POST', update: ['PUT', 'POST'], delete: ['DELETE', 'POST']]
+
+    def index() {
+        List<Location> locations = Location.list(sort: "name", order: "asc")
+
+        def locationRows = locations.collect { loc ->
+            Map coords = encryptionService.decryptCoords(loc)
+
+            [
+                    id   : loc.id,
+                    name : loc.name,
+                    code : loc.code,
+                    type : loc.class.simpleName,
+                    x    : coords.x,
+                    y    : coords.y
+            ]
+        }
+
+        [
+                locationList : locationRows,
+                locationCount: locationRows.size()
+        ]
     }
 
     def show(Long id) {
         def loc = locationService.get(id)
         if (!loc) { notFound(); return }
-        [location: loc]
+        Map coords = encryptionService.decryptCoords(loc)
+        render view: 'show', model: [location: loc, plainX: coords.x, plainY: coords.y]
     }
 
     def create() {
-        respond new Location(params)
+        render view: 'create', model: [location: new Location(params)]
     }
 
     def save() {
@@ -31,15 +47,12 @@ class LocationController {
         def location = new Location()
         location.name = json.name
         location.code = json.code
-
         Double plainX = json.x as Double
         Double plainY = json.y as Double
-
         if (!plainX || !plainY) {
             render(status: 400, text: 'x and y coordinates are required')
             return
         }
-
         try {
             locationService.saveWithCoords(location, plainX, plainY)
             render(locationService.decryptToMap(location) as JSON)
@@ -47,10 +60,12 @@ class LocationController {
             render(status: 400, text: "Error saving location: ${e.message}")
         }
     }
+
     def edit(Long id) {
         def loc = locationService.get(id)
         if (!loc) { notFound(); return }
-        [location: loc]
+        Map coords = encryptionService.decryptCoords(loc)
+        render view: 'edit', model: [location: loc, plainX: coords.x, plainY: coords.y]
     }
 
     def update(Location location) {
@@ -64,7 +79,7 @@ class LocationController {
                 locationService.save(location)
             }
         } catch (ValidationException e) {
-            respond location.errors, view: 'edit'
+            render view: 'edit', model: [location: location]
             return
         }
         flash.message = "Location '${location.name}' updated."
@@ -78,23 +93,34 @@ class LocationController {
         redirect action: 'index', method: 'GET'
     }
 
+    // JSON endpoint used by warehouse & location index pages via fetch()
     def search() {
-        String q = params.q
-        def results = locationService.search(q)
-        render results as JSON
+        render locationService.search(params.q) as JSON
     }
 
     def highPriority() {
         def results = locationService.getHighPriorityDeliveries()
-        [highPriorityPoints: results, deliveryList: results]
+        render view: 'highPriority', model: [highPriorityPoints: results, deliveryList: results]
     }
+
     def warehousesWithSpace() {
-        def results = locationService.getWarehousesWithSpace()
-        [warehouseList: results]
+        // Decrypt coordinates for each warehouse before passing to view
+        def decryptedList = locationService.getWarehousesWithSpace().collect { wh ->
+            Map coords = encryptionService.decryptCoords(wh)
+            [instance: wh, plainX: coords.x, plainY: coords.y]
+        }
+        render view: 'warehousesWithSpace', model: [warehouseList: decryptedList]
     }
 
     def sortedByDistance() {
-        [locationList: locationService.getAllSortedByDistance()]
+        // Decrypt and compute distance for each location before passing to view
+        def decryptedList = locationService.getAllSortedByDistance().collect { loc ->
+            Map coords = encryptionService.decryptCoords(loc)
+            Double dx = coords.x ?: 0.0
+            Double dy = coords.y ?: 0.0
+            [instance: loc, plainX: dx, plainY: dy, distance: Math.hypot(dx, dy)]
+        }
+        render view: 'sortedByDistance', model: [locationList: decryptedList]
     }
 
     def insight(Long id) {
@@ -104,7 +130,7 @@ class LocationController {
             redirect action: 'index'
             return
         }
-        [location: location, insight: locationService.getAIInsight(location)]
+        render view: 'insight', model: [location: location, insight: locationService.getAIInsight(location)]
     }
 
     def ajaxInsight(Long id) {
@@ -114,7 +140,7 @@ class LocationController {
     }
 
     def history() {
-        [logList: AIQueryLog.list()]
+        render view: 'history', model: [logList: AIQueryLog.list()]
     }
 
     protected void notFound() {

@@ -1,35 +1,30 @@
 package com.ubs.delivery
 
 import grails.gorm.transactions.Transactional
-import org.springframework.beans.factory.annotation.Value
 
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import java.security.SecureRandom
-
+import java.util.Arrays
 @Transactional
 class EncryptionService {
-
-    @Value('${app.encryptionKey}')
-    String encryptionKeyHex
+    def encryptionKeyService
 
     private static final String AES_ALGO = 'AES/GCM/NoPadding'
     private static final int    IV_LEN   = 12
     private static final int    TAG_BITS = 128
 
     private SecretKey getKey() {
-        if (!encryptionKeyHex?.trim()) {
-            throw new IllegalStateException(
-                    'APP_ENCRYPTION_KEY env var is not set. ' +
-                            'Run EncryptionService.generateKeyHex() to generate one.')
-        }
-        byte[] keyBytes = hexToBytes(encryptionKeyHex.trim())
+        byte[] keyBytes = encryptionKeyService.getEncryptionKey()
+
         if (keyBytes.length != 32) {
             throw new IllegalStateException(
-                    "APP_ENCRYPTION_KEY must be 64 hex chars (32 bytes). Got ${keyBytes.length}.")
+                    "Vault encryption key must be 32 bytes. Got ${keyBytes.length}."
+            )
         }
+
         return new SecretKeySpec(keyBytes, 'AES')
     }
 
@@ -40,9 +35,17 @@ class EncryptionService {
 
     Double decryptCoordinate(byte[] encryptedValue) {
         if (!encryptedValue) return null
-        return Double.parseDouble(new String(decrypt(encryptedValue), 'UTF-8'))
-    }
 
+        try {
+            if (encryptedValue.length <= IV_LEN) {
+                return Double.parseDouble(new String(encryptedValue, 'UTF-8'))
+            }
+
+            return Double.parseDouble(new String(decrypt(encryptedValue), 'UTF-8'))
+        } catch (Exception e) {
+            return null
+        }
+    }
 
     Map decryptCoords(Location location) {
         if (!location) return [x: null, y: null]

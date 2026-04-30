@@ -1,23 +1,18 @@
+#server:
+#    port: 8080
+#    servlet:
+#        context-path: /delivery
+#
 ---
-grails:
-    profile: web
-    codegen:
-        defaultPackage: delivery.system.grails
-    gorm:
-        reactor:
-            events: false
-info:
-    app:
-        name: '@info.app.name@'
-        version: '@info.app.version@'
-        grailsVersion: '@info.app.grailsVersion@'
-
-
-app:
-    encryptionKey: ${APP_ENCRYPTION_KEY:a3f8c2d1e4b57a90f2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5}
-    hashingPepper: ${APP_HASHING_PEPPER:dev-pepper-change-this-in-production-use-64-random-chars}
-
 spring:
+    servlet:
+        multipart:
+            max-file-size: 50MB
+            max-request-size: 50MB
+    autoconfigure:
+        exclude:
+            - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+            - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
     jmx:
         unique-names: true
     main:
@@ -34,8 +29,38 @@ spring:
                 - '**/*.gson'
                 - 'logback-spring.xml'
                 - '*.properties'
+    cloud:
+        vault:
+            host: 127.0.0.1
+            port: 8200
+            scheme: http
+            authentication: APPROLE
+            app-role:
+                role-id: ${VAULT_ROLE_ID}
+                secret-id: ${VAULT_SECRET_ID}
+                app-role-path: approle
+            kv:
+                enabled: true
+                backend: secret
+
+grails:
+    profile: web
+    codegen:
+        defaultPackage: delivery.system.grails
+    gorm:
+        reactor:
+            events: false
+
+info:
+    app:
+        name: '@info.app.name@'
+        version: '@info.app.version@'
+        grailsVersion: '@info.app.grailsVersion@'
+
 environments:
     development:
+        encryption:
+            devKey: b15217c752d2fa421084c1694ca7113f69b63602ae2b8a244319d76e96bb79c4
         management:
             endpoints:
                 enabled-by-default: true
@@ -47,59 +72,6 @@ environments:
         management:
             endpoints:
                 enabled-by-default: false
-
----
-grails:
-    mime:
-        disable:
-            accept:
-                header:
-                    userAgents:
-                        - Gecko
-                        - WebKit
-                        - Presto
-                        - Trident
-        types:
-            all: '*/*'
-            atom: application/atom+xml
-            css: text/css
-            csv: text/csv
-            form: application/x-www-form-urlencoded
-            html:
-                - text/html
-                - application/xhtml+xml
-            js: text/javascript
-            json:
-                - application/json
-                - text/json
-            multipartForm: multipart/form-data
-            pdf: application/pdf
-            rss: application/rss+xml
-            text: text/plain
-            hal:
-                - application/hal+json
-                - application/hal+xml
-            xml:
-                - text/xml
-                - application/xml
-    urlmapping:
-        cache:
-            maxsize: 1000
-    controllers:
-        defaultScope: singleton
-    converters:
-        encoding: UTF-8
-    views:
-        default:
-            codec: html
-        gsp:
-            encoding: UTF-8
-            htmlcodec: xml
-            codecs:
-                expression: html
-                scriptlet: html
-                taglib: none
-                staticparts: none
 
 ---
 hibernate:
@@ -128,21 +100,3 @@ environments:
         dataSource:
             dbCreate: none
             url: jdbc:postgresql://localhost:5432/deliverydb
-            properties:
-                jmxEnabled: true
-                initialSize: 5
-                maxActive: 50
-                minIdle: 5
-                maxIdle: 25
-                maxWait: 10000
-                maxAge: 600000
-                timeBetweenEvictionRunsMillis: 5000
-                minEvictableIdleTimeMillis: 60000
-                validationQuery: SELECT 1
-                validationQueryTimeout: 3
-                validationInterval: 15000
-                testOnBorrow: true
-                testWhileIdle: true
-                testOnReturn: false
-                jdbcInterceptors: ConnectionState
-                defaultTransactionIsolation: 2

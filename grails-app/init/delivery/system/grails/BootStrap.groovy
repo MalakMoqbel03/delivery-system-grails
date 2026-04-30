@@ -31,6 +31,11 @@ class BootStrap {
                     [url: '/location/history/**',          role: 'ROLE_ADMIN'],
                     [url: '/location/insight/**',          role: 'ROLE_ADMIN'],
                     [url: '/location/sortedByDistance',    role: 'ROLE_ADMIN'],
+                    // Read-only endpoints used by index pages (must come before the broad /location/** rule)
+                    [url: '/location/search',              role: 'ROLE_USER'],
+                    [url: '/location/index',               role: 'ROLE_USER'],
+                    [url: '/location/show/**',             role: 'ROLE_USER'],
+                    [url: '/location/warehousesWithSpace', role: 'ROLE_USER'],
                     [url: '/location/**',                  role: 'ROLE_ADMIN'],
                     [url: '/deliveryPoint/create',         role: 'ROLE_ADMIN'],
                     [url: '/deliveryPoint/save',           role: 'ROLE_ADMIN'],
@@ -119,24 +124,34 @@ class BootStrap {
                 // ── Print benchmark summary ────────────────────────────────
                 Map summary = locationService.encryptionBenchmarkService.getSummary()
                 println ""
-                println "========== ENCRYPTION BENCHMARK SUMMARY =========="
+                println "==================== ENCRYPTION BENCHMARK SUMMARY ===================="
                 println "  (first call per column-count excluded as JVM warm-up)"
                 println ""
+                println String.format("  %-6s | %-3s | %-12s | %-12s | %-12s | %-12s | %-12s | %-12s | %-12s | %-12s | %-12s | %-12s | %-14s | %-14s",
+                        "Cols", "n",
+                        "Enc Warmup", "Enc Avg", "Enc Min", "Enc Max",
+                        "Ins Warmup", "Ins Avg", "Ins Min", "Ins Max",
+                        "Tot Warmup", "Tot Avg", "Tot Min", "Tot Max")
+                println "  " + "-" * 195
                 [2, 4].each { cols ->
                     if (summary[cols]) {
                         def s = summary[cols]
+                        double totWarmup = (s.encWarmupMs ?: 0.0) + (s.insWarmupMs ?: 0.0)
                         println String.format(
-                                "  %d-col  steady: n=%-2d | avg=%6.4f ms | min=%6.4f ms | max=%6.4f ms  (warm-up was %.4f ms)",
-                                cols, s.count, s.avgMs, s.minMs, s.maxMs, s.warmupMs ?: 0.0
+                                "  %-6s | %-3d | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %9.4f ms | %11.4f ms | %11.4f ms",
+                                "${cols}-col", s.count,
+                                s.encWarmupMs ?: 0.0, s.encAvgMs ?: 0.0, s.encMinMs ?: 0.0, s.encMaxMs ?: 0.0,
+                                s.insWarmupMs ?: 0.0, s.insAvgMs ?: 0.0, s.insMinMs ?: 0.0, s.insMaxMs ?: 0.0,
+                                totWarmup,             s.totalAvgMs ?: 0.0, s.totalMinMs ?: 0.0, s.totalMaxMs ?: 0.0
                         )
                     }
                 }
                 if (summary['comparison']) {
                     println ""
-                    println "  4-col overhead vs 2-col: ${summary.comparison.overhead}"
+                    println "  4-col / 2-col encrypt overhead: ${summary.comparison.encOverhead}"
                     println "  Note: ${summary.comparison.note}"
                 }
-                println "==================================================="
+                println "======================================================================="
                 println ""
             }
         }
